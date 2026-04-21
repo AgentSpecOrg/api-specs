@@ -51,9 +51,12 @@ public function main() returns error? {
         }
     }
 
-    Connector[] connectors = filterStr.length() > 0
-        ? ALL_CONNECTORS.filter(c => c.name.toLowerAscii().includes(filterStr))
-        : ALL_CONNECTORS;
+    // openapi_specs.json is the single source of truth — load it first so we
+    // can both filter the run list and carry forward existing state.
+    ResultEntry[] results = loadResults(outFile);
+    ResultEntry[] connectors = filterStr.length() > 0
+        ? results.filter(r => r.name.toLowerAscii().includes(filterStr))
+        : results;
 
     // ── Dry run ───────────────────────────────────────────────────────────────
     if dryRun {
@@ -61,9 +64,9 @@ public function main() returns error? {
         io:println(string `  OpenAPI Spec Finder — ${connectors.length()} connector(s)`);
         io:println(DASH);
         int i = 1;
-        foreach Connector c in connectors {
-            string t = c.targetTitle is string ? string ` [${c.targetTitle ?: ""}]` : "";
-            io:println(string `  ${lp(i.toString(), 3)}. ${pad(c.name, 32)} ${c.sourceUrl}${t}`);
+        foreach ResultEntry r in connectors {
+            string t = r.targetTitle is string ? string ` [${r.targetTitle ?: ""}]` : "";
+            io:println(string `  ${lp(i.toString(), 3)}. ${pad(r.name, 32)} ${r.sourceUrl}${t}`);
             i += 1;
         }
         io:println(BAR);
@@ -88,16 +91,14 @@ public function main() returns error? {
     io:println(BAR);
     io:println("");
 
-    // ── Load existing results ─────────────────────────────────────────────────
-    ResultEntry[] existing = loadResults(outFile);
+    // ── Index for O(1) lookup and in-place updates ────────────────────────────
     map<int> existingIdx = {};
     int ei = 0;
-    foreach ResultEntry r in existing {
+    foreach ResultEntry r in results {
         existingIdx[r.name] = ei;
         ei += 1;
     }
 
-    ResultEntry[] results = existing;
     time:Utc runStart = time:utcNow();
     int found = 0;
     int notFound = 0;
@@ -107,32 +108,23 @@ public function main() returns error? {
 
     // ── Sequential loop ───────────────────────────────────────────────────────
     int idx = 0;
-    foreach Connector c in connectors {
+    foreach ResultEntry r in connectors {
         idx += 1;
         string progress = string `[${idx}/${total}]`;
 
-        string? knownUrl  = ();
-        string? knownRepo = ();
-        string? prevHash  = ();
-        string? prevFreq  = "daily";   // default for brand-new entries
+        Connector c = {name: r.name, sourceUrl: r.sourceUrl, targetTitle: r.targetTitle};
 
-        if existingIdx.hasKey(c.name) {
-            ResultEntry prev = results[existingIdx.get(c.name)];
-            knownUrl  = prev.specUrl;
-            knownRepo = prev.specRepo;
-            prevHash  = prev.contentHash;
-            prevFreq  = prev.frequency;  // preserve existing frequency
-        }
+        string? knownUrl  = r.specUrl;
+        string? knownRepo = r.specRepo;
+        string? prevHash  = r.contentHash;
+        string? prevFreq  = r.frequency;
 
         // ── Frequency skip check ──────────────────────────────────────────────
-        if existingIdx.hasKey(c.name) {
-            ResultEntry prev = results[existingIdx.get(c.name)];
-            if shouldSkipDueToFrequency(prev) {
-                skipped += 1;
-                io:println(DASH);
-                io:println(string `${progress} SKIP   ${c.name}  [frequency: ${prev.frequency ?: "null"}, last checked: ${prev.checkedAt}]`);
-                continue;
-            }
+        if shouldSkipDueToFrequency(r) {
+            skipped += 1;
+            io:println(DASH);
+            io:println(string `${progress} SKIP   ${r.name}  [frequency: ${r.frequency ?: "null"}, last checked: ${r.checkedAt}]`);
+            continue;
         }
 
         io:println(DASH);
@@ -150,7 +142,7 @@ public function main() returns error? {
         // ── Run with a hard wall-clock budget ─────────────────────────────────
         ResultEntry entry = runConnectorWithBudget(c, knownUrl, knownRepo, apiKey, progress, maxConnectorSecs);
 
-        // Preserve or assign frequency
+        // Preserve frequency from the existing entry
         entry.frequency = prevFreq;
 
         if entry.status == "found" {
@@ -160,8 +152,8 @@ public function main() returns error? {
             io:println(string `            format=${entry.format ?: "?"} | version=${entry.apiVersion ?: "?"} | ${entry.elapsedSeconds}s`);
 
             // ── Download spec to openapi/ folder ─────────────────────────────
-            string vendor = c.vendor ?: deriveVendor(c.name);
-            string apiId  = c.apiId ?: deriveApiId(c.name);
+            string vendor = deriveVendor(c.name);
+            string apiId  = deriveApiId(c.name);
             string specUrl  = entry.specUrl ?: "";
             string fmt      = entry.format ?: "json";
 
@@ -192,9 +184,6 @@ public function main() returns error? {
 
         if existingIdx.hasKey(entry.name) {
             results[existingIdx.get(entry.name)] = entry;
-        } else {
-            existingIdx[entry.name] = results.length();
-            results.push(entry);
         }
 
         error? saveErr = saveResults(results, outFile);
