@@ -28,5 +28,20 @@
         "checkedAt": "2026-04-21T03:02:20.256148Z",
         "elapsedSeconds": 63.2,
         "contentHash": null
+    },
+    {
+        "name": "Elastic Cloud",
+        "sourceUrl": "https://www.elastic.co/docs/api/doc/cloud/",
+        "targetTitle": null,
+        "specUrl": "https://www.elastic.co/docs/api/doc/cloud.yaml",
+        "specRepo": "elastic/cloud-sdk-go",
+        "title": null,
+        "apiVersion": "1",
+        "format": "yaml",
+        "frequency": "daily",
+        "status": "found",
+        "checkedAt": "2026-04-21T05:11:47.433378807Z",
+        "elapsedSeconds": 27.8,
+        "contentHash": "8431b506368b7fd67bb49f2b6557273e1126bca0f1fc7a3829cd733c72c7e675"
     }
 ]
