@@ -2,8 +2,6 @@ public type Connector record {|
     string name;
     string sourceUrl;
     string? targetTitle;
-    string? vendor = ();
-    string? apiId = ();
 |};
 
 public type SpecResult record {|
@@ -13,19 +11,21 @@ public type SpecResult record {|
     string format;
 |};
 
+// All fields except name and sourceUrl have defaults so that a user can add a
+// new entry to openapi_specs.json with just {"name":"…","sourceUrl":"…"}.
 public type ResultEntry record {|
     string name;
     string sourceUrl;
-    string? targetTitle;
-    string? specUrl;
-    string? specRepo;
-    string? apiVersion;
-    string? format;
-    string? frequency;
-    string status;
-    string checkedAt;
-    decimal elapsedSeconds;
-    string? contentHash;
+    string? targetTitle = ();
+    string? specUrl = ();
+    string? specRepo = ();
+    string? apiVersion = ();
+    string? format = ();
+    string? frequency = "daily";
+    string status = "pending";
+    string checkedAt = "";
+    decimal elapsedSeconds = 0.0d;
+    string? contentHash = ();
 |};
 
 // Output of the discovery step
