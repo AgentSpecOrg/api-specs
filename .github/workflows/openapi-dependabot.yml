@@ -23,6 +23,9 @@ permissions:
   pull-requests: write
   issues: write
 
+env:
+  ENABLE_CONNECTOR_REGEN: "false"
+
 jobs:
   update-openapi-specs:
     runs-on: ubuntu-latest
@@ -364,7 +367,7 @@ jobs:
       # ── Trigger connector regeneration ────────────────────────────────────────
 
       - name: Trigger Connector Regeneration
-        if: env.UPDATES_FOUND == 'true' && steps.merge_pr.outputs.merged == 'true'
+        if: env.UPDATES_FOUND == 'true' && steps.merge_pr.outputs.merged == 'true' && env.ENABLE_CONNECTOR_REGEN == 'true'
         env:
           GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
         run: |
