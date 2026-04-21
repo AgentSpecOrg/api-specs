@@ -1,31 +1,11 @@
 [
     {
         "name": "HubSpot CRM Extensions Videoconferencing",
-        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
-        "targetTitle": null,
-        "specUrl": "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Video%20Conferencing%20Extension/Rollouts/148903/v3/videoConferencingExtension.json",
-        "specRepo": "HubSpot/HubSpot-public-api-spec-collection",
-        "apiVersion": null,
-        "format": "json",
-        "frequency": "daily",
-        "status": "found",
-        "checkedAt": "2026-04-21T03:01:17.081717Z",
-        "elapsedSeconds": 38.5,
-        "contentHash": null
+        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection"
     },
 
     {
         "name": "PayPal Invoices",
-        "sourceUrl": "https://developer.paypal.com/docs/api/invoicing/v2/",
-        "targetTitle": null,
-        "specUrl": "https://raw.githubusercontent.com/paypal/paypal-rest-api-specifications/main/openapi/invoicing_v2.json",
-        "specRepo": "paypal/paypal-rest-api-specifications",
-        "apiVersion": null,
-        "format": "json",
-        "frequency": "daily",
-        "status": "found",
-        "checkedAt": "2026-04-21T03:02:20.256148Z",
-        "elapsedSeconds": 63.2,
-        "contentHash": null
+        "sourceUrl": "https://developer.paypal.com/docs/api/invoicing/v2/"
     }
 ]
