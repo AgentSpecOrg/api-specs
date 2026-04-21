@@ -276,13 +276,12 @@ function parseStableCheckResult(string text, string fallbackUrl, string? fallbac
     }
 
     // Extract title and apiVersion from the fetched content
-    [string?, string?] [extractedTitle, extractedVersion] = extractSpecMetadata(body);
+    string? extractedVersion = extractSpecMetadata(body);
 
     string fmt = resultUrl.toLowerAscii().endsWith(".json") ? "json" : "yaml";
     return {
         specUrl:    resultUrl,
         specRepo:   repo.length() > 0 ? repo : fallbackRepo,
-        title:      extractedTitle,
         apiVersion: extractedVersion,
         format:     fmt
     };
@@ -513,13 +512,12 @@ function parseGithubCheckResult(string text, string? fallbackRepo) returns SpecR
     }
 
     // Extract title and apiVersion from the fetched content
-    [string?, string?] [extractedTitle, extractedVersion] = extractSpecMetadata(body);
+    string? extractedVersion = extractSpecMetadata(body);
 
     string fmt = resultUrl.toLowerAscii().endsWith(".json") ? "json" : "yaml";
     return {
         specUrl:    resultUrl,
         specRepo:   repo.length() > 0 ? repo : fallbackRepo,
-        title:      extractedTitle,
         apiVersion: extractedVersion,
         format:     fmt
     };
@@ -914,12 +912,11 @@ public function directVerifyKnownUrl(string knownUrl, string? knownRepo) returns
     }
 
     // Extract title and apiVersion
-    [string?, string?] [extractedTitle, extractedVersion] = extractSpecMetadata(body);
+    string? extractedVersion = extractSpecMetadata(body);
 
     return {
         specUrl:    knownUrl,
         specRepo:   knownRepo,
-        title:      extractedTitle,
         apiVersion: extractedVersion,
         format:     fmt
     };
@@ -997,11 +994,10 @@ public function stepContentVerify(
 
         if accepted {
             // Extract title and apiVersion from the validated content
-            [string?, string?] [extractedTitle, extractedVersion] = extractSpecMetadata(body);
+            string? extractedVersion = extractSpecMetadata(body);
             return {
                 specUrl:    candidateUrl,
                 specRepo:   discovery.specRepo,
-                title:      extractedTitle,
                 apiVersion: extractedVersion,
                 format:     fmt
             };

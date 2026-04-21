@@ -9,7 +9,6 @@ public type Connector record {|
 public type SpecResult record {|
     string specUrl;
     string? specRepo;
-    string? title;
     string? apiVersion;
     string format;
 |};
@@ -20,7 +19,6 @@ public type ResultEntry record {|
     string? targetTitle;
     string? specUrl;
     string? specRepo;
-    string? title;
     string? apiVersion;
     string? format;
     string? frequency;

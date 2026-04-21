@@ -157,7 +157,7 @@ public function main() returns error? {
             found += 1;
             io:println(string `${progress} PASS   ${label}`);
             io:println(string `         => ${entry.specUrl ?: ""}`);
-            io:println(string `            format=${entry.format ?: "?"} | title=${entry.title ?: "?"} | version=${entry.apiVersion ?: "?"} | ${entry.elapsedSeconds}s`);
+            io:println(string `            format=${entry.format ?: "?"} | version=${entry.apiVersion ?: "?"} | ${entry.elapsedSeconds}s`);
 
             // ── Download spec to openapi/ folder ─────────────────────────────
             string vendor = c.vendor ?: deriveVendor(c.name);
@@ -166,7 +166,7 @@ public function main() returns error? {
             string fmt      = entry.format ?: "json";
 
             [boolean, string]|error downloadResult = downloadAndSaveSpec(
-                specUrl, fmt, entry.title, entry.apiVersion, vendor, apiId, specDir, prevHash
+                specUrl, fmt, entry.apiVersion, vendor, apiId, specDir, prevHash, c.name, c.sourceUrl
             );
 
             if downloadResult is [boolean, string] {
@@ -291,7 +291,6 @@ function runConnectorWithBudget(
             targetTitle:    c.targetTitle,
             specUrl:        (),
             specRepo:       (),
-            title:          (),
             apiVersion:     (),
             format:         (),
             frequency:      (),
@@ -384,7 +383,6 @@ function processConnector(
             targetTitle:    c.targetTitle,
             specUrl:        finalResult.specUrl,
             specRepo:       finalResult.specRepo,
-            title:          finalResult.title,
             apiVersion:     finalResult.apiVersion,
             format:         finalResult.format,
             frequency:      (),      // set by caller after return
@@ -400,7 +398,6 @@ function processConnector(
             targetTitle:    c.targetTitle,
             specUrl:        (),
             specRepo:       (),
-            title:          (),
             apiVersion:     (),
             format:         (),
             frequency:      (),
@@ -426,7 +423,57 @@ function loadResults(string path) returns ResultEntry[] {
 }
 
 function saveResults(ResultEntry[] results, string path) returns error? {
-    check io:fileWriteString(path, results.toJson().toJsonString());
+    string formatted = prettyPrintJson(results.toJson(), 0) + "\n";
+    check io:fileWriteString(path, formatted);
+}
+
+// ─── JSON pretty-printer ──────────────────────────────────────────────────────
+// Produces 4-space indented JSON with a blank line between top-level array items.
+
+function prettyPrintJson(json val, int indentLevel) returns string {
+    string indent = buildIndent(indentLevel);
+    string childIndent = buildIndent(indentLevel + 1);
+
+    if val is map<json> {
+        map<json> obj = val;
+        string[] keys = obj.keys();
+        if keys.length() == 0 { return "{}"; }
+        string result = "{\n";
+        boolean first = true;
+        foreach string key in keys {
+            if !first { result += ",\n"; }
+            result += childIndent + "\"" + jsonEsc(key) + "\": " + prettyPrintJson(obj.get(key), indentLevel + 1);
+            first = false;
+        }
+        result += "\n" + indent + "}";
+        return result;
+    } else if val is json[] {
+        json[] arr = val;
+        if arr.length() == 0 { return "[]"; }
+        string result = "[\n";
+        boolean first = true;
+        foreach json item in arr {
+            // blank line between top-level array items (indentLevel == 0)
+            if !first { result += indentLevel == 0 ? ",\n\n" : ",\n"; }
+            result += childIndent + prettyPrintJson(item, indentLevel + 1);
+            first = false;
+        }
+        result += "\n" + indent + "]";
+        return result;
+    } else if val is string {
+        return "\"" + jsonEsc(val) + "\"";
+    } else if val is () {
+        return "null";
+    } else {
+        return val.toString();
+    }
+}
+
+isolated function buildIndent(int level) returns string {
+    string result = "";
+    int i = 0;
+    while i < level { result += "    "; i += 1; }
+    return result;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
