@@ -494,14 +494,14 @@ public final Connector[] & readonly ALL_CONNECTORS = [
     // ── HubSpot CRM Extensions ────────────────────────────────────────────────
     // "HubSpot CRM Extensions Videoconferencing" covers the Video Conferencing
     // Extension API for embedding video links in CRM meetings.
-    //{name: "HubSpot CRM Extensions Videoconferencing", docsUrl: "https://github.com/HubSpot/HubSpot-public-api-spec-collection", targetTitle: ()},
+    {name: "HubSpot CRM Extensions Videoconferencing", docsUrl: "https://github.com/HubSpot/HubSpot-public-api-spec-collection", targetTitle: ()},
 
     // ── Payments ──────────────────────────────────────────────────────────────
     // "PayPal Invoices" covers the Invoicing v2 REST API (create, send, track
     // and manage invoices and payment records).
     // "PayPal Subscriptions" covers the Subscriptions v1 REST API (plans,
     // subscriptions, billing cycles, and trial periods).
-    //{name: "PayPal Invoices",       docsUrl: "https://developer.paypal.com/docs/api/invoicing/v2/",     targetTitle: ()},
+    {name: "PayPal Invoices",       docsUrl: "https://developer.paypal.com/docs/api/invoicing/v2/",     targetTitle: ()}
     //{name: "PayPal Subscriptions",  docsUrl: "https://developer.paypal.com/docs/api/subscriptions/v1/", targetTitle: ()},
 
     // ── Search / Observability ────────────────────────────────────────────────
@@ -519,7 +519,7 @@ public final Connector[] & readonly ALL_CONNECTORS = [
     //{name: "Epic FHIR",        docsUrl: "https://fhir.epic.com/Specifications",        targetTitle: ()},
     //{name: "Cerner FHIR",      docsUrl: "https://docs.oracle.com/en/industries/health/millennium-platform-apis/mfrap/r4_overview.html", targetTitle: ()},
     //{name: "AthenaHealth FHIR",docsUrl: "https://docs.athenahealth.com/api/docs/fhir-apis", targetTitle: ()}
-    {name: "Stripe", docsUrl: "https://stripe.com/docs/api", targetTitle: ()},
-    {name: "Salesforce Marketing Cloud", docsUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/apis-overview?utm_source", targetTitle: ()}
+    //{name: "Stripe", docsUrl: "https://stripe.com/docs/api", targetTitle: ()},
+    //{name: "Salesforce Marketing Cloud", docsUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/apis-overview?utm_source", targetTitle: ()}
 
 ];
