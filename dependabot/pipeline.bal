@@ -17,7 +17,7 @@ import ballerina/time;
 public function stepQuickVerify(
     string? knownSpecUrl,
     string? knownSpecRepo,
-    string docsUrl,
+    string sourceUrl,
     string anthropicKey
 ) returns SpecResult?|string {
 
@@ -32,7 +32,7 @@ public function stepQuickVerify(
     }
 
     log:printInfo(string `  [step1] stable endpoint — LLM version check: ${knownSpecUrl}`);
-    return stepStableVersionCheck(knownSpecUrl, docsUrl, knownSpecRepo, anthropicKey);
+    return stepStableVersionCheck(knownSpecUrl, sourceUrl, knownSpecRepo, anthropicKey);
 }
 
 // ─── STEP 1b: Stable Version Check (LLM-assisted) ────────────────────────────
@@ -104,18 +104,18 @@ const string STABLE_CHECK_SYSTEM_PROMPT =
 
 public function stepStableVersionCheck(
     string knownSpecUrl,
-    string docsUrl,
+    string sourceUrl,
     string? knownSpecRepo,
     string anthropicKey
 ) returns SpecResult?|string {
 
     log:printInfo(string `  [step1b] stable version check: ${knownSpecUrl}`);
-    log:printDebug(string `  [step1b:debug] docsUrl=${docsUrl} knownRepo=${knownSpecRepo ?: "none"}`);
+    log:printDebug(string `  [step1b:debug] sourceUrl=${sourceUrl} knownRepo=${knownSpecRepo ?: "none"}`);
 
     string userMsg = string `Verify this OpenAPI spec URL and check if it is still the latest stable version.
 
 Known spec URL: ${knownSpecUrl}
-Docs URL: ${docsUrl}
+Docs URL: ${sourceUrl}
 
 Steps:
 1. Fetch the known spec URL to confirm it is still a valid OpenAPI/Swagger spec.
@@ -251,7 +251,6 @@ function parseStableCheckResult(string text, string fallbackUrl, string? fallbac
         return ();
     }
 
-    // ── Java parser validation ────────────────────────────────────────────────
     string|error body = httpGetBodyFull(resultUrl);
     if body is error {
         log:printWarn(string `  [step1b] content fetch failed for ${resultUrl}: ${body.message()}`);
@@ -276,12 +275,15 @@ function parseStableCheckResult(string text, string fallbackUrl, string? fallbac
         log:printInfo(string `  [step1b] confirmed valid OpenAPI ${detail}: ${resultUrl}`);
     }
 
+    // Extract title and apiVersion from the fetched content
+    [string?, string?] [extractedTitle, extractedVersion] = extractSpecMetadata(body);
+
     string fmt = resultUrl.toLowerAscii().endsWith(".json") ? "json" : "yaml";
     return {
         specUrl:    resultUrl,
         specRepo:   repo.length() > 0 ? repo : fallbackRepo,
-        title:      (),
-        apiVersion: (),
+        title:      extractedTitle,
+        apiVersion: extractedVersion,
         format:     fmt
     };
 }
@@ -334,12 +336,12 @@ const string GITHUB_CHECK_SYSTEM_PROMPT =
 public function stepGithubVersionCheck(
     string knownSpecUrl,
     string? knownSpecRepo,
-    string docsUrl,
+    string sourceUrl,
     string anthropicKey
 ) returns SpecResult?|string {
 
     log:printInfo(string `  [step2] GitHub version check: ${knownSpecUrl}`);
-    log:printDebug(string `  [step2:debug] docsUrl=${docsUrl} knownRepo=${knownSpecRepo ?: "none"}`);
+    log:printDebug(string `  [step2:debug] sourceUrl=${sourceUrl} knownRepo=${knownSpecRepo ?: "none"}`);
 
     string repoContext = knownSpecRepo is string
         ? string `\nGitHub repo: ${knownSpecRepo}`
@@ -355,7 +357,7 @@ public function stepGithubVersionCheck(
 
     string userMsg = string `Check if this GitHub-hosted OpenAPI spec URL is still the latest version:
 Known URL: ${knownSpecUrl}${repoContext}${repoForContentsApi}
-Docs URL (official documentation page — use to cross-reference the latest version): ${docsUrl}
+Docs URL (official documentation page — use to cross-reference the latest version): ${sourceUrl}
 
 1. Fetch the known URL to verify it is still a valid spec
 2. Check the parent folder for newer siblings
@@ -486,7 +488,6 @@ function parseGithubCheckResult(string text, string? fallbackRepo) returns SpecR
         return ();
     }
 
-    // ── Java parser validation ────────────────────────────────────────────────
     string|error body = httpGetBodyFull(resultUrl);
     if body is error {
         log:printWarn(string `  [step2] content fetch failed for ${resultUrl}: ${body.message()}`);
@@ -511,12 +512,15 @@ function parseGithubCheckResult(string text, string? fallbackRepo) returns SpecR
         log:printInfo(string `  [step2] confirmed valid OpenAPI ${detail}: ${resultUrl}`);
     }
 
+    // Extract title and apiVersion from the fetched content
+    [string?, string?] [extractedTitle, extractedVersion] = extractSpecMetadata(body);
+
     string fmt = resultUrl.toLowerAscii().endsWith(".json") ? "json" : "yaml";
     return {
         specUrl:    resultUrl,
         specRepo:   repo.length() > 0 ? repo : fallbackRepo,
-        title:      (),
-        apiVersion: (),
+        title:      extractedTitle,
+        apiVersion: extractedVersion,
         format:     fmt
     };
 }
@@ -673,7 +677,7 @@ const string DISCOVERY_SYSTEM_PROMPT =
     "IMPORTANT: List official vendor URLs BEFORE any APIs-guru URLs.";
 
 public function stepDiscovery(
-    string docsUrl,
+    string sourceUrl,
     string apiName,
     string? targetTitle,
     string anthropicKey,
@@ -682,7 +686,7 @@ public function stepDiscovery(
 ) returns DiscoveryResult {
 
     log:printInfo(string `  [step3] starting discovery for: ${apiName}`);
-    log:printDebug(string `  [step3:debug] docsUrl=${docsUrl} targetTitle=${targetTitle ?: "none"} knownRepo=${knownSpecRepo ?: "none"} knownUrl=${knownSpecUrl ?: "none"}`);
+    log:printDebug(string `  [step3:debug] sourceUrl=${sourceUrl} targetTitle=${targetTitle ?: "none"} knownRepo=${knownSpecRepo ?: "none"} knownUrl=${knownSpecUrl ?: "none"}`);
 
     string targetNote = targetTitle is string
         ? string `\nTarget: find ONLY the spec titled '${targetTitle}'.`
@@ -697,7 +701,7 @@ public function stepDiscovery(
         : "";
 
     string userMsg = string `Find the latest stable OpenAPI spec download URL for: ${apiName}
-Docs URL: ${docsUrl}${targetNote}${urlHint}${repoHint}
+Docs URL: ${sourceUrl}${targetNote}${urlHint}${repoHint}
 
 STRICT PRIORITY ORDER:
 1. If a previously confirmed spec URL is given above, ALWAYS check that URL first:
@@ -866,11 +870,7 @@ function parseDiscoveryResult(string text) returns DiscoveryResult {
 
 // ─── Text-based spec heuristic (fallback when Java validator is unavailable) ──
 
-// Returns true if the content looks like an OpenAPI/Swagger document based on
-// well-known top-level keys.  Used only when the Java parser JAR is not built.
 isolated function looksLikeSpec(string content) returns boolean {
-    // Only scan the first 10 KB — the openapi:/swagger: key always appears
-    // near the top of the document, and avoid a full toLowerAscii() on large files.
     string head = content.length() > 10000 ? content.substring(0, 10000) : content;
     string lo = head.toLowerAscii();
     return lo.includes("\"openapi\"") || lo.includes("openapi:") ||
@@ -884,7 +884,6 @@ public function directVerifyKnownUrl(string knownUrl, string? knownRepo) returns
     log:printDebug(string `  [direct-verify:debug] repo=${knownRepo ?: "none"}`);
 
     time:Utc t0 = time:utcNow();
-    // Fetch the full file — the Java parser needs a complete, unparsed document.
     string|error body = httpGetBodyFull(knownUrl);
     decimal elapsed = rd(time:utcDiffSeconds(time:utcNow(), t0));
 
@@ -894,13 +893,11 @@ public function directVerifyKnownUrl(string knownUrl, string? knownRepo) returns
     }
     log:printDebug(string `  [direct-verify:debug] fetch OK in ${elapsed}s — ${body.length()} bytes`);
 
-    // ── Java parser validation ────────────────────────────────────────────────
     string fmt = knownUrl.toLowerAscii().endsWith(".json") ? "json" : "yaml";
     [boolean, string] [valid, detail] = javaValidateSpec(body);
     log:printDebug(string `  [direct-verify:debug] java validation: valid=${valid} detail=${detail}`);
 
     if detail == "java-validator-unavailable" {
-        // JAR not built yet — fall back to text heuristic
         if !looksLikeSpec(body) {
             log:printWarn(string `  [direct-verify] heuristic rejected ${knownUrl}: content does not look like a spec`);
             return ();
@@ -916,22 +913,19 @@ public function directVerifyKnownUrl(string knownUrl, string? knownRepo) returns
         log:printInfo(string `  [direct-verify] confirmed valid OpenAPI ${detail}: ${knownUrl}`);
     }
 
+    // Extract title and apiVersion
+    [string?, string?] [extractedTitle, extractedVersion] = extractSpecMetadata(body);
+
     return {
         specUrl:    knownUrl,
         specRepo:   knownRepo,
-        title:      (),
-        apiVersion: (),
+        title:      extractedTitle,
+        apiVersion: extractedVersion,
         format:     fmt
     };
 }
 
 // ─── STEP 4: Content Verify ───────────────────────────────────────────────────
-//
-// For each candidate URL:
-//   1. HEAD check (fast pre-filter) + Content-Length
-//   2. If Content-Length > 5 MB  → log a notice, then fetch and validate normally
-//   3. Fetch the FULL file via httpGetBodyFull (up to 20 MB HTTP safety cap)
-//   4. Validate with the Java OpenAPI parser — needs a complete document
 
 public function stepContentVerify(
     DiscoveryResult discovery
@@ -949,20 +943,13 @@ public function stepContentVerify(
         log:printInfo(string `  [step4 check] ${candidateUrl}`);
         log:printDebug(string `  [step4:debug] processing: ${candidateUrl}`);
 
-        // ── Infer format from URL extension ───────────────────────────────────
         string fmt = candidateUrl.toLowerAscii().endsWith(".json") ? "json" : "yaml";
 
-        // ── HEAD check ────────────────────────────────────────────────────────
         boolean headPassed = headOk(candidateUrl);
         int contentLength = 0;
         if headPassed {
             contentLength = getContentLength(candidateUrl);
             log:printDebug(string `  [step4:debug] headOk=true contentLength=${contentLength}`);
-
-            // Large files (> 5 MB): fetch and validate normally.
-            // httpGetBodyFull supports up to 20 MB (60 s timeout, Git Blobs API
-            // fallback for GitHub).  The Java parser runs with setResolve(false)
-            // so it does not chase $ref URLs and handles large files fine.
             if contentLength > 5000000 {
                 log:printInfo(string `  [step4] large file (${contentLength} bytes) — fetching for validation: ${candidateUrl}`);
             }
@@ -971,11 +958,6 @@ public function stepContentVerify(
             log:printDebug(string `  [step4:debug] headOk=false for ${candidateUrl}`);
         }
 
-        // ── Full content fetch ────────────────────────────────────────────────
-        // No byte cap — the Java parser must receive the complete document to
-        // parse it correctly. httpGetBodyFull uses a 60 s timeout and a 20 MB
-        // safety cap at the HTTP layer (Content-Length was checked above but
-        // servers that omit that header could still stream large bodies).
         time:Utc t0 = time:utcNow();
         string|error body = httpGetBodyFull(candidateUrl);
         decimal elapsed = rd(time:utcDiffSeconds(time:utcNow(), t0));
@@ -987,46 +969,42 @@ public function stepContentVerify(
         }
         log:printDebug(string `  [step4:debug] content fetch OK in ${elapsed}s — body=${body.length()} bytes`);
 
-        // ── Java OpenAPI parser validation ────────────────────────────────────
         [boolean, string] [valid, detail] = javaValidateSpec(body);
         log:printDebug(string `  [step4:debug] java validation: valid=${valid} detail=${detail} url=${candidateUrl}`);
 
+        boolean accepted = false;
+
         if detail == "java-validator-unavailable" {
-            // JAR not built yet — fall back to text heuristic
             if looksLikeSpec(body) {
                 log:printInfo(string `  [step4] heuristic accepted (java-validator unavailable): ${candidateUrl}`);
-                return {
-                    specUrl:    candidateUrl,
-                    specRepo:   discovery.specRepo,
-                    title:      (),
-                    apiVersion: (),
-                    format:     fmt
-                };
+                accepted = true;
+            } else {
+                log:printWarn(string `  [step4] heuristic rejected (java-validator unavailable): ${candidateUrl}`);
+                log:printDebug(string `  [step4:debug] body snippet: ${body.substring(0, body.length() > 300 ? 300 : body.length())}`);
             }
-            log:printWarn(string `  [step4] heuristic rejected (java-validator unavailable): ${candidateUrl}`);
-            log:printDebug(string `  [step4:debug] body snippet: ${body.substring(0, body.length() > 300 ? 300 : body.length())}`);
         } else if valid {
             log:printInfo(string `  [step4] Java parser confirmed valid OpenAPI ${detail}: ${candidateUrl}`);
-            return {
-                specUrl:    candidateUrl,
-                specRepo:   discovery.specRepo,
-                title:      (),
-                apiVersion: (),
-                format:     fmt
-            };
+            accepted = true;
         } else {
             log:printWarn(string `  [step4] Java parser rejected: ${candidateUrl} — ${detail}`);
             if looksLikeSpec(body) {
                 log:printWarn(string `  [step4] heuristic override — Java parser rejected but content looks like a spec: ${candidateUrl}`);
-                return {
-                    specUrl:    candidateUrl,
-                    specRepo:   discovery.specRepo,
-                    title:      (),
-                    apiVersion: (),
-                    format:     fmt
-                };
+                accepted = true;
+            } else {
+                log:printDebug(string `  [step4:debug] body snippet: ${body.substring(0, body.length() > 300 ? 300 : body.length())}`);
             }
-            log:printDebug(string `  [step4:debug] body snippet: ${body.substring(0, body.length() > 300 ? 300 : body.length())}`);
+        }
+
+        if accepted {
+            // Extract title and apiVersion from the validated content
+            [string?, string?] [extractedTitle, extractedVersion] = extractSpecMetadata(body);
+            return {
+                specUrl:    candidateUrl,
+                specRepo:   discovery.specRepo,
+                title:      extractedTitle,
+                apiVersion: extractedVersion,
+                format:     fmt
+            };
         }
     }
 
