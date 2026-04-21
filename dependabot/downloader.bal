@@ -4,14 +4,12 @@
 // Folder layout: {openApiDir}/{vendor}/{apiId}/{versionFolder}/openapi.{ext}
 //                {openApiDir}/{vendor}/{apiId}/{versionFolder}/.metadata.json
 //
-// Version folder logic:
-//   - If the version folder already exists and the file exists:
-//       compare hashes — overwrite only if content changed.
-//   - If the version folder does not exist:
-//       create it, write the spec and a minimal .metadata.json.
-//   - A version folder name that doesn't start with "v" and begins with a digit
-//       gets a "v" prefix (e.g., "3.0" → "v3.0").
-//   - If apiVersion is nil or empty, "latest" is used as the folder name.
+// .metadata.json is only created when a NEW version folder is created for the
+// first time. It is never modified when an existing spec file is replaced.
+//
+// Version folder naming:
+//   - Version strings starting with a digit get a "v" prefix (e.g. "3.0" → "v3.0").
+//   - nil or empty apiVersion → "latest" is used as the folder name.
 
 import ballerina/crypto;
 import ballerina/file;
@@ -25,12 +23,13 @@ import ballerina/log;
 function downloadAndSaveSpec(
     string specUrl,
     string format,
-    string? title,
     string? apiVersion,
     string vendor,
     string apiId,
     string openApiDir,
-    string? existingHash
+    string? existingHash,
+    string connectorName,
+    string sourceUrl
 ) returns [boolean, string]|error {
 
     string versionFolder = normalizeVersion(apiVersion ?: "");
@@ -62,10 +61,17 @@ function downloadAndSaveSpec(
         } else {
             log:printInfo(string `  [download] new file in existing version dir: ${specFile}`);
         }
+        // Never touch .metadata.json when the version folder already exists
     } else {
         log:printInfo(string `  [download] creating version dir: ${versionDir}`);
         check file:createDir(versionDir, file:RECURSIVE);
-        check io:fileWriteString(metaFile, buildMetadataJson(title ?: apiId, specUrl));
+
+        // Generate .metadata.json only for the new folder
+        string? baseUrl     = extractSpecBaseUrl(content);
+        string? description = extractSpecDescription(content);
+        string[] tags       = deriveTags(connectorName, vendor);
+        check io:fileWriteString(metaFile, buildMetadataJson(connectorName, baseUrl, sourceUrl, description, tags));
+        log:printInfo(string `  [download] created .metadata.json for new folder: ${versionDir}`);
     }
 
     check io:fileWriteString(specFile, content);
@@ -74,14 +80,14 @@ function downloadAndSaveSpec(
     return [true, newHash];
 }
 
-// Calculates SHA-256 hash of content as lowercase hex.
+// ─── Hash helpers ─────────────────────────────────────────────────────────────
+
 function calculateHash(string content) returns string {
     byte[] contentBytes = content.toBytes();
     byte[] hashBytes = crypto:hashSha256(contentBytes);
     return hashBytes.toBase16();
 }
 
-// Returns true when content hash has changed (or no previous hash exists).
 isolated function hasContentChanged(string? oldHash, string newHash) returns boolean {
     if oldHash is () || oldHash == "" {
         return true;
@@ -89,18 +95,17 @@ isolated function hasContentChanged(string? oldHash, string newHash) returns boo
     return oldHash != newHash;
 }
 
-// Normalises an apiVersion string into a safe folder name.
+// ─── Version / path helpers ───────────────────────────────────────────────────
+
 isolated function normalizeVersion(string version) returns string {
     string v = version.trim();
     if v.length() == 0 { return "latest"; }
-    // Prepend "v" when version starts with a digit
     if v[0] >= "0" && v[0] <= "9" {
         return "v" + v;
     }
     return v;
 }
 
-// Derives a vendor slug from a connector display name (first word, lowercase).
 isolated function deriveVendor(string connectorName) returns string {
     string[] parts = re ` `.split(connectorName);
     if parts.length() > 0 {
@@ -109,8 +114,6 @@ isolated function deriveVendor(string connectorName) returns string {
     return connectorName.toLowerAscii();
 }
 
-// Derives an API id from a connector display name
-// (all words after the first, dot-joined and lowercased).
 isolated function deriveApiId(string connectorName) returns string {
     string[] parts = re ` `.split(connectorName);
     if parts.length() > 1 {
@@ -126,10 +129,58 @@ isolated function deriveApiId(string connectorName) returns string {
     return connectorName.toLowerAscii();
 }
 
-// Builds a minimal .metadata.json for a newly created spec folder.
-function buildMetadataJson(string name, string specUrl) returns string {
+// Derives tags from the connector display name (lowercase meaningful words).
+isolated function deriveTags(string connectorName, string vendor) returns string[] {
+    string[] stopwords = ["api", "rest", "the", "a", "an", "of", "for", "and", "or", "with"];
+    string[] tags = [];
+    map<boolean> seen = {};
+
+    foreach string word in re ` `.split(connectorName.toLowerAscii()) {
+        if word.length() <= 1 { continue; }
+        boolean stop = false;
+        foreach string sw in stopwords {
+            if word == sw { stop = true; break; }
+        }
+        if !stop && !seen.hasKey(word) {
+            seen[word] = true;
+            tags.push(word);
+        }
+    }
+
+    string vendorLower = vendor.toLowerAscii();
+    if !seen.hasKey(vendorLower) {
+        tags.push(vendorLower);
+    }
+    return tags;
+}
+
+// ─── Metadata generation ──────────────────────────────────────────────────────
+
+function buildMetadataJson(
+    string connectorName,
+    string? baseUrl,
+    string sourceUrl,
+    string? description,
+    string[] tags
+) returns string {
+    string tagsJson = buildTagsJson(tags);
     return string `{
-    "name": "${jsonEsc(name)}",
-    "specUrl": "${jsonEsc(specUrl)}"
+    "name": "${jsonEsc(connectorName)}",
+    "baseUrl": "${jsonEsc(baseUrl ?: "")}",
+    "documentationUrl": "${jsonEsc(sourceUrl)}",
+    "description": "${jsonEsc(description ?: "")}",
+    "tags": ${tagsJson}
 }`;
+}
+
+isolated function buildTagsJson(string[] tags) returns string {
+    if tags.length() == 0 { return "[]"; }
+    string result = "[";
+    boolean first = true;
+    foreach string tag in tags {
+        if !first { result += ", "; }
+        result += "\"" + jsonEsc(tag) + "\"";
+        first = false;
+    }
+    return result + "]";
 }

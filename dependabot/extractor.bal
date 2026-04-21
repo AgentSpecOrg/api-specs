@@ -1,5 +1,5 @@
 // extractor.bal
-// Extracts title and apiVersion from a spec's content (JSON or YAML).
+// Extracts fields from a spec's content (JSON or YAML).
 // Primary path: proper YAML/JSON parsing via ballerina/data.yaml and data.jsondata.
 // Fallback path: line-by-line regex scan when parsing fails.
 
@@ -7,64 +7,99 @@ import ballerina/data.jsondata;
 import ballerina/data.yaml;
 import ballerina/log;
 
-// Extracts [title, apiVersion] from spec content.
-// Either value may be nil if extraction fails.
-function extractSpecMetadata(string content) returns [string?, string?] {
-    string? title = ();
-    string? apiVersion = ();
-
+// Extracts the apiVersion from spec content (info.version).
+// Returns nil if extraction fails.
+function extractSpecMetadata(string content) returns string? {
     do {
-        string trimmedContent = content.trim();
-        boolean isJson = trimmedContent.startsWith("{") || trimmedContent.startsWith("[");
-
-        json parsedData = {};
-
-        if isJson {
-            json|error jsonResult = jsondata:parseString(content);
-            if jsonResult is error {
-                log:printDebug(string `  [extract] JSON parsing failed: ${jsonResult.message()}, falling back to regex`);
-                string|error ver = extractApiVersionWithRegex(content);
-                if ver is string { apiVersion = ver; }
-                return [title, apiVersion];
-            }
-            parsedData = jsonResult;
-        } else {
-            json|error yamlResult = yaml:parseString(content);
-            if yamlResult is error {
-                log:printDebug(string `  [extract] YAML parsing failed: ${yamlResult.message()}, falling back to regex`);
-                string|error ver = extractApiVersionWithRegex(content);
-                if ver is string { apiVersion = ver; }
-                return [title, apiVersion];
-            }
-            parsedData = yamlResult;
+        json|error parsed = parseSpecContent(content);
+        if parsed is error {
+            string|error ver = extractApiVersionWithRegex(content);
+            return ver is string ? ver : ();
         }
-
-        if parsedData is map<json> {
-            json? infoField = parsedData["info"];
+        if parsed is map<json> {
+            json? infoField = parsed["info"];
             if infoField is map<json> {
-                json? titleField = infoField["title"];
-                if titleField is string { title = titleField; }
+                json? v = infoField["version"];
+                if v is string  { return v; }
+                if v is int     { return v.toString(); }
+                if v is decimal { return v.toString(); }
+                if v is float   { return v.toString(); }
+            }
+        }
+    } on fail error e {
+        log:printDebug(string `  [extract] apiVersion extraction failed: ${e.message()}`);
+    }
+    return ();
+}
 
-                json? versionField = infoField["version"];
-                if versionField is string {
-                    apiVersion = versionField;
-                } else if versionField is int {
-                    apiVersion = versionField.toString();
-                } else if versionField is decimal {
-                    apiVersion = versionField.toString();
-                } else if versionField is float {
-                    apiVersion = versionField.toString();
+// Extracts the base URL from spec content.
+// OAS3: servers[0].url   Swagger 2.0: scheme + host + basePath
+function extractSpecBaseUrl(string content) returns string? {
+    do {
+        json|error parsed = parseSpecContent(content);
+        if parsed is error { return (); }
+        if parsed is map<json> {
+            // OAS3
+            json? serversField = parsed["servers"];
+            if serversField is json[] && serversField.length() > 0 {
+                json first = serversField[0];
+                if first is map<json> {
+                    json? urlField = first["url"];
+                    if urlField is string && urlField.length() > 0 {
+                        return urlField;
+                    }
+                }
+            }
+            // Swagger 2.0
+            json? hostField = parsed["host"];
+            if hostField is string {
+                string scheme = "https";
+                json? schemesField = parsed["schemes"];
+                if schemesField is json[] && schemesField.length() > 0 {
+                    json s = schemesField[0];
+                    if s is string { scheme = s; }
+                }
+                json? basePathField = parsed["basePath"];
+                string basePath = basePathField is string ? basePathField : "";
+                return scheme + "://" + hostField + basePath;
+            }
+        }
+    } on fail error e {
+        log:printDebug(string `  [extract] baseUrl extraction failed: ${e.message()}`);
+    }
+    return ();
+}
+
+// Extracts the description from spec content (info.description).
+function extractSpecDescription(string content) returns string? {
+    do {
+        json|error parsed = parseSpecContent(content);
+        if parsed is error { return (); }
+        if parsed is map<json> {
+            json? infoField = parsed["info"];
+            if infoField is map<json> {
+                json? descField = infoField["description"];
+                if descField is string && descField.length() > 0 {
+                    return descField;
                 }
             }
         }
     } on fail error e {
-        log:printDebug(string `  [extract] metadata extraction failed: ${e.message()}`);
+        log:printDebug(string `  [extract] description extraction failed: ${e.message()}`);
     }
-
-    return [title, apiVersion];
+    return ();
 }
 
-// Fallback: regex-based line-by-line scan for version.
+// Parses spec content as JSON or YAML and returns the root json value.
+function parseSpecContent(string content) returns json|error {
+    string trimmed = content.trim();
+    if trimmed.startsWith("{") || trimmed.startsWith("[") {
+        return jsondata:parseString(content);
+    }
+    return yaml:parseString(content);
+}
+
+// Fallback: regex-based line-by-line scan for info.version.
 function extractApiVersionWithRegex(string content) returns string|error {
     string[] lines = re `\n`.split(content);
     boolean inInfoSection = false;
@@ -92,11 +127,9 @@ function extractApiVersionWithRegex(string content) returns string|error {
         }
 
         if inInfoSection {
-            // Exit info section if we hit a top-level key
             if !line.startsWith(" ") && !line.startsWith("\t") && trimmedLine != "" && !trimmedLine.startsWith("#") {
                 break;
             }
-
             if trimmedLine.startsWith("version:") {
                 string[] parts = re `:`.split(trimmedLine);
                 if parts.length() >= 2 {

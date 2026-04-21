@@ -796,7 +796,7 @@ function pickBestCandidate(string text) returns SpecResult? {
         if headOk(candidateUrl) {
             string fmt = candidateUrl.toLowerAscii().endsWith(".json") ? "json" : "yaml";
             log:printInfo(string `  [ok] ${candidateUrl}`);
-            return {specUrl: candidateUrl, specRepo: specRepo, title: (), apiVersion: (), format: fmt};
+            return {specUrl: candidateUrl, specRepo: specRepo, apiVersion: (), format: fmt};
         }
         log:printInfo(string `  [dead] ${candidateUrl}`);
     }
