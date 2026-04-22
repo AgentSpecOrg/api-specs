@@ -51,15 +51,26 @@ function downloadAndSaveSpec(
     boolean versionDirExists = check file:test(versionDir, file:EXISTS);
 
     if versionDirExists {
-        boolean fileExists = check file:test(specFile, file:EXISTS);
-        if fileExists {
+        // Check for a spec in the same format first
+        boolean targetExists = check file:test(specFile, file:EXISTS);
+        if targetExists {
             if !hasContentChanged(existingHash, newHash) {
                 log:printInfo(string `  [download] no change: ${vendor}/${apiId}@${versionFolder}`);
                 return [false, newHash];
             }
             log:printInfo(string `  [download] content changed — overwriting: ${specFile}`);
         } else {
-            log:printInfo(string `  [download] new file in existing version dir: ${specFile}`);
+            // Check if the opposite format exists (format may have changed)
+            string otherFileName = format == "json" ? "openapi.yaml" : "openapi.json";
+            string otherFile = string `${versionDir}/${otherFileName}`;
+            boolean otherExists = check file:test(otherFile, file:EXISTS);
+            if otherExists {
+                // Remove the stale opposite-format file before writing the new one
+                check file:remove(otherFile);
+                log:printInfo(string `  [download] format changed — removed ${otherFileName}, writing ${fileName}`);
+            } else {
+                log:printInfo(string `  [download] new file in existing version dir: ${specFile}`);
+            }
         }
         // Never touch .metadata.json when the version folder already exists
     } else {

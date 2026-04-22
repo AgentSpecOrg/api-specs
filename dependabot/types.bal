@@ -21,7 +21,7 @@ public type ResultEntry record {|
     string? specRepo = ();
     string? apiVersion = ();
     string? format = ();
-    string? frequency = "daily";
+    string? frequency = "monthly";
     string status = "pending";
     string checkedAt = "";
     decimal elapsedSeconds = 0.0d;
