@@ -1,0 +1,7 @@
+{
+    "name": "AI Azure",
+    "baseUrl": "",
+    "documentationUrl": "https://learn.microsoft.com/en-us/azure/ai-services/openai/reference",
+    "description": "",
+    "tags": ["ai", "azure"]
+}
