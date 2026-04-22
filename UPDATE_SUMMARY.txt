@@ -1,0 +1,2 @@
+hubspot/crm.extensions.videoconferencing@v3: updated spec
+paypal/invoices@v2.6: updated spec
