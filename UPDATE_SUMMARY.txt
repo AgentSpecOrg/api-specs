@@ -1,0 +1,5 @@
+ai/azure@v1: updated spec
+ai/ollama@v0.1.0: updated spec
+ai/mistral@v1.0.0: updated spec
+stripe/stripe@v2026-04-22.dahlia: updated spec
+slack/slack@v1.7.0: updated spec

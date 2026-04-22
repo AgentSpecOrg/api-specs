@@ -1,0 +1,7 @@
+{
+    "name": "Slack",
+    "baseUrl": "https://slack.com/api",
+    "documentationUrl": "https://github.com/slackapi/slack-api-specs",
+    "description": "One way to interact with the Slack platform is its HTTP RPC-based Web API, a collection of methods requiring OAuth 2.0-based user, bot, or workspace tokens blessed with related OAuth scopes.",
+    "tags": ["slack"]
+}
