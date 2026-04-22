@@ -1,15 +1,46 @@
 [
     {
         "name": "HubSpot CRM Extensions Videoconferencing",
-        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection"
+        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
+        "targetTitle": null,
+        "specUrl": "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Video%20Conferencing%20Extension/Rollouts/148903/v3/videoConferencingExtension.json",
+        "specRepo": "HubSpot/HubSpot-public-api-spec-collection",
+        "apiVersion": "v3",
+        "format": "json",
+        "frequency": "monthly",
+        "status": "found",
+        "checkedAt": "2026-04-22T05:56:19.122455368Z",
+        "elapsedSeconds": 33.1,
+        "contentHash": "b60fd26cdfbb907364c8a34841827c4ac44b15775d550e505ba080ec451e0e16"
     },
 
     {
         "name": "PayPal Invoices",
-        "sourceUrl": "https://developer.paypal.com/docs/api/invoicing/v2/"
+        "sourceUrl": "https://developer.paypal.com/docs/api/invoicing/v2/",
+        "targetTitle": null,
+        "specUrl": "https://raw.githubusercontent.com/paypal/paypal-rest-api-specifications/main/openapi/invoicing_v2.json",
+        "specRepo": "paypal/paypal-rest-api-specifications",
+        "apiVersion": "2.6",
+        "format": "json",
+        "frequency": "monthly",
+        "status": "found",
+        "checkedAt": "2026-04-22T05:57:08.275102129Z",
+        "elapsedSeconds": 48.9,
+        "contentHash": "b38ec179b0a904eed50825cd0b456e788569dc3fdb6efd08e131751f7cc19f52"
     },
+
     {
         "name": "Stripe",
-        "sourceUrl": "https://stripe.com/docs/api"
+        "sourceUrl": "https://stripe.com/docs/api",
+        "targetTitle": null,
+        "specUrl": null,
+        "specRepo": null,
+        "apiVersion": null,
+        "format": null,
+        "frequency": "monthly",
+        "status": "not_found",
+        "checkedAt": "2026-04-22T06:07:08.933228475Z",
+        "elapsedSeconds": 600.0,
+        "contentHash": null
     }
 ]
