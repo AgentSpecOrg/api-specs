@@ -1,76 +1,22 @@
 [
     {
-        "name": "AI Azure",
-        "sourceUrl": "https://learn.microsoft.com/en-us/azure/ai-services/openai/reference",
-        "targetTitle": null,
-        "specUrl": "https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/ai/data-plane/OpenAI.v1/azure-v1-v1-generated.yaml",
-        "specRepo": "Azure/azure-rest-api-specs",
-        "apiVersion": "v1",
-        "format": "yaml",
-        "frequency": "daily",
-        "status": "found",
-        "checkedAt": "2026-04-22T03:48:37.130620295Z",
-        "elapsedSeconds": 29.5,
-        "contentHash": "3f6bbb0883a861cf9a7ce51311363d74267c299f6ed1bee210e8c52ffbbf24db"
+        "name": "Twilio",
+        "sourceUrl": "https://www.twilio.com/docs/usage/api"
     },
-
     {
-        "name": "AI Ollama",
-        "sourceUrl": "https://github.com/ollama/ollama/blob/main/docs/api.md",
-        "targetTitle": null,
-        "specUrl": "https://raw.githubusercontent.com/ollama/ollama/main/docs/openapi.yaml",
-        "specRepo": "ollama/ollama",
-        "apiVersion": "0.1.0",
-        "format": "yaml",
-        "frequency": "daily",
-        "status": "found",
-        "checkedAt": "2026-04-22T03:48:53.652790367Z",
-        "elapsedSeconds": 12.9,
-        "contentHash": "5132ade08c3c949fdcff41d9b2302934e8e0d43deaf1b408a65acea5859bb1b7"
+        "name": "GoogleAPIs Sheets",
+        "sourceUrl": "https://developers.google.com/sheets/api/reference/rest"
     },
-
     {
-        "name": "AI Mistral",
-        "sourceUrl": "https://docs.mistral.ai/api/",
-        "targetTitle": null,
-        "specUrl": "https://docs.mistral.ai/openapi.yaml",
-        "specRepo": "mistralai/mistral-common",
-        "apiVersion": "1.0.0",
-        "format": "yaml",
-        "frequency": "daily",
-        "status": "found",
-        "checkedAt": "2026-04-22T03:49:02.204263100Z",
-        "elapsedSeconds": 8.4,
-        "contentHash": "ff8a7389b7a4e61145561361537aae37c49f7e2dcf7c4f79f41e80a30b484cc3"
+        "name": "Twitter",
+        "sourceUrl": "https://github.com/xdevplatform"
     },
-
     {
-        "name": "Stripe",
-        "sourceUrl": "https://github.com/stripe/openapi",
-        "targetTitle": null,
-        "specUrl": "https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json",
-        "specRepo": "stripe/openapi",
-        "apiVersion": "2026-04-22.dahlia",
-        "format": "json",
-        "frequency": "null",
-        "status": "found",
-        "checkedAt": "2026-04-22T03:50:48.367519964Z",
-        "elapsedSeconds": 104.9,
-        "contentHash": "6f7c5c122b98ccca6218b3980cbbf48773ffd40dc2fc9a09c4783143b9261915"
+        "name": "Salesforce",
+        "sourceUrl": "https://developer.salesforce.com/docs/apis"
     },
-
     {
-        "name": "Slack",
-        "sourceUrl": "https://github.com/slackapi/slack-api-specs",
-        "targetTitle": null,
-        "specUrl": "https://raw.githubusercontent.com/slackapi/slack-api-specs/master/web-api/slack_web_openapi_v2.json",
-        "specRepo": "slackapi/slack-api-specs",
-        "apiVersion": "1.7.0",
-        "format": "json",
-        "frequency": "null",
-        "status": "found",
-        "checkedAt": "2026-04-22T03:51:08.820415275Z",
-        "elapsedSeconds": 14.1,
-        "contentHash": "742a5c977180a829df8767cf57bc417d99b3713583aee83741efb9c08ca731e7"
+        "name": "Redis",
+        "sourceUrl": "https://redis.io/docs/latest/commands/"
     }
 ]
