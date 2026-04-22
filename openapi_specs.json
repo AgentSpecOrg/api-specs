@@ -1,22 +1,15 @@
 [
     {
-        "name": "Twilio",
-        "sourceUrl": "https://www.twilio.com/docs/usage/api"
+        "name": "HubSpot CRM Extensions Videoconferencing",
+        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection"
+    },
+
+    {
+        "name": "PayPal Invoices",
+        "sourceUrl": "https://developer.paypal.com/docs/api/invoicing/v2/"
     },
     {
-        "name": "GoogleAPIs Sheets",
-        "sourceUrl": "https://developers.google.com/sheets/api/reference/rest"
-    },
-    {
-        "name": "Twitter",
-        "sourceUrl": "https://github.com/xdevplatform"
-    },
-    {
-        "name": "Salesforce",
-        "sourceUrl": "https://developer.salesforce.com/docs/apis"
-    },
-    {
-        "name": "Redis",
-        "sourceUrl": "https://redis.io/docs/latest/commands/"
+        "name": "Stripe",
+        "sourceUrl": "https://stripe.com/docs/api"
     }
 ]
