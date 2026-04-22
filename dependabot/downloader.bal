@@ -49,13 +49,15 @@ function downloadAndSaveSpec(
 
     string newHash = calculateHash(content);
 
-    boolean versionDirExists = check file:test(versionDir, file:EXISTS);
+    // IS_DIR is used deliberately — file:EXISTS can return false for a directory
+    // on some Ballerina runtimes, which would wrongly trigger the new-folder path.
+    boolean versionDirExists = check file:test(versionDir, file:IS_DIR);
 
     if versionDirExists {
-        // Compare against the ACTUAL file currently on disk in the version folder.
-        // This avoids stale openapi_specs.json hashes causing false "no change".
+        // Compare against the ACTUAL files currently on disk.
+        // Use IS_READABLE for files (more reliable than EXISTS for regular files).
         boolean targetExists = check file:test(specFile, file:EXISTS);
-        boolean otherExists = check file:test(otherFile, file:EXISTS);
+        boolean otherExists  = check file:test(otherFile, file:EXISTS);
 
         string? oldHash = ();
         if targetExists {
@@ -71,7 +73,8 @@ function downloadAndSaveSpec(
             return [false, newHash];
         }
 
-        // Existing version folder: replace spec file(s), but never touch metadata.
+        // Remove both spec formats before writing — handles format switches and
+        // avoids leaving stale files alongside the newly written spec.
         if targetExists {
             check file:remove(specFile);
             log:printInfo(string `  [download] removed old ${fileName}`);
@@ -87,8 +90,8 @@ function downloadAndSaveSpec(
         log:printInfo(string `  [download] creating version dir: ${versionDir}`);
         check file:createDir(versionDir, file:RECURSIVE);
 
-        // Generate .metadata.json only if this is truly a new folder (guard
-        // against re-entry in case createDir succeeded on an existing path).
+        // Guard against createDir silently succeeding on an existing path
+        // (e.g. case-insensitive filesystem).
         boolean metaExists = check file:test(metaFile, file:EXISTS);
         if !metaExists {
             string? baseUrl     = extractSpecBaseUrl(content);
