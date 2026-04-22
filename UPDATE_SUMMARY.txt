@@ -1,0 +1,2 @@
+stripe/stripe@v2026-04-22.dahlia: updated spec
+slack/slack@v1.7.0: updated spec
