@@ -1,22 +1,76 @@
 [
     {
         "name": "Twilio",
-        "sourceUrl": "https://www.twilio.com/docs/usage/api"
+        "sourceUrl": "https://www.twilio.com/docs/usage/api",
+        "targetTitle": null,
+        "specUrl": "https://raw.githubusercontent.com/twilio/twilio-oai/main/spec/yaml/twilio_api_v2010.yaml",
+        "specRepo": "twilio/twilio-oai",
+        "apiVersion": "1.0.0",
+        "format": "yaml",
+        "frequency": "monthly",
+        "status": "found",
+        "checkedAt": "2026-04-22T05:31:31.989860727Z",
+        "elapsedSeconds": 24.4,
+        "contentHash": "a620369b5122eeae12728c6c168fdbc79f3f16a08263fff255ccf7b4940d4e3a"
     },
+
     {
         "name": "GoogleAPIs Sheets",
-        "sourceUrl": "https://developers.google.com/sheets/api/reference/rest"
+        "sourceUrl": "https://developers.google.com/sheets/api/reference/rest",
+        "targetTitle": null,
+        "specUrl": "https://raw.githubusercontent.com/APIs-guru/openapi-directory/main/APIs/googleapis.com/sheets/v4/openapi.yaml",
+        "specRepo": "APIs-guru/openapi-directory",
+        "apiVersion": "v4",
+        "format": "yaml",
+        "frequency": "monthly",
+        "status": "found",
+        "checkedAt": "2026-04-22T05:31:47.712302980Z",
+        "elapsedSeconds": 15.3,
+        "contentHash": "5598e24f4f4512bae57e7a06675a47d140012e9399c7d8b673f9c3b390aa68c3"
     },
+
     {
         "name": "Twitter",
-        "sourceUrl": "https://github.com/xdevplatform"
+        "sourceUrl": "https://github.com/xdevplatform",
+        "targetTitle": null,
+        "specUrl": "https://raw.githubusercontent.com/APIs-guru/openapi-directory/main/APIs/twitter.com/current/2.62/openapi.yaml",
+        "specRepo": "xdevplatform/twitter-api-v2-openapi",
+        "apiVersion": "2.62",
+        "format": "yaml",
+        "frequency": "monthly",
+        "status": "found",
+        "checkedAt": "2026-04-22T05:37:30.564355164Z",
+        "elapsedSeconds": 342.2,
+        "contentHash": "dc97ebbf6093d51d64c43dd44ae962cd314f8e61b91aa901fed3758abe5bf068"
     },
+
     {
         "name": "Salesforce",
-        "sourceUrl": "https://developer.salesforce.com/docs/apis"
+        "sourceUrl": "https://developer.salesforce.com/docs/apis",
+        "targetTitle": null,
+        "specUrl": "https://raw.githubusercontent.com/salesforce/anypoint-automation-client-generator/master/spec/apim.yml",
+        "specRepo": "salesforce/anypoint-automation-client-generator",
+        "apiVersion": "1.0.0",
+        "format": "yaml",
+        "frequency": "monthly",
+        "status": "found",
+        "checkedAt": "2026-04-22T05:42:06.745095743Z",
+        "elapsedSeconds": 275.7,
+        "contentHash": "446d94b75ff0255b09647c18323d3162390b42091d2f315373d8686a0fe28b28"
     },
+
     {
         "name": "Redis",
-        "sourceUrl": "https://redis.io/docs/latest/commands/"
+        "sourceUrl": "https://redis.io/docs/latest/commands/",
+        "targetTitle": null,
+        "specUrl": "https://api.redislabs.com/v1/cloud-api-docs",
+        "specRepo": "redis/docs",
+        "apiVersion": "Version 1",
+        "format": "yaml",
+        "frequency": "monthly",
+        "status": "found",
+        "checkedAt": "2026-04-22T05:43:37.406187907Z",
+        "elapsedSeconds": 90.5,
+        "contentHash": "be97412a5ecaf68789578ea17351fc0fa1f2bc37717170ebfb692a593e9ca496"
     }
 ]

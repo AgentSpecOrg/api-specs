@@ -1,0 +1,7 @@
+{
+    "name": "Twilio",
+    "baseUrl": "",
+    "documentationUrl": "https://www.twilio.com/docs/usage/api",
+    "description": "",
+    "tags": ["twilio"]
+}
