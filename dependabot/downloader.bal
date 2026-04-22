@@ -41,67 +41,85 @@ function downloadAndSaveSpec(
     string otherFile = string `${versionDir}/${otherFileName}`;
     string metaFile   = string `${versionDir}/.metadata.json`;
 
-    log:printInfo(string `  [download] fetching: ${specUrl}`);
+    log:printInfo(string `  [download] --- BEGIN ${vendor}/${apiId}@${versionFolder} ---`);
+    log:printInfo(string `  [download] openApiDir  : ${openApiDir}`);
+    log:printInfo(string `  [download] versionDir  : ${versionDir}`);
+    log:printInfo(string `  [download] specFile    : ${specFile}`);
+    log:printInfo(string `  [download] otherFile   : ${otherFile}`);
+    log:printInfo(string `  [download] metaFile    : ${metaFile}`);
+    log:printInfo(string `  [download] fetching    : ${specUrl}`);
+
     string|error content = httpGetBodyFull(specUrl);
     if content is error {
         return error(string `Failed to download ${specUrl}: ${content.message()}`);
     }
+    log:printInfo(string `  [download] fetched ${content.length()} bytes`);
 
     string newHash = calculateHash(content);
+    log:printInfo(string `  [download] newHash     : ${newHash.substring(0, 16)}...`);
 
-    // IS_DIR is used deliberately — file:EXISTS can return false for a directory
-    // on some Ballerina runtimes, which would wrongly trigger the new-folder path.
     boolean versionDirExists = check file:test(versionDir, file:IS_DIR);
+    log:printInfo(string `  [download] IS_DIR(versionDir) = ${versionDirExists}`);
 
     if versionDirExists {
-        // Compare against the ACTUAL files currently on disk.
-        // Use IS_READABLE for files (more reliable than EXISTS for regular files).
         boolean targetExists = check file:test(specFile, file:EXISTS);
         boolean otherExists  = check file:test(otherFile, file:EXISTS);
+        boolean metaExistsNow = check file:test(metaFile, file:EXISTS);
+        log:printInfo(string `  [download] EXISTS(${fileName})       = ${targetExists}`);
+        log:printInfo(string `  [download] EXISTS(${otherFileName})  = ${otherExists}`);
+        log:printInfo(string `  [download] EXISTS(.metadata.json)    = ${metaExistsNow}`);
 
         string? oldHash = ();
         if targetExists {
             string existingContent = check io:fileReadString(specFile);
             oldHash = calculateHash(existingContent);
+            log:printInfo(string `  [download] oldHash(${fileName})  : ${(<string>oldHash).substring(0, 16)}...`);
         } else if otherExists {
             string existingContent = check io:fileReadString(otherFile);
             oldHash = calculateHash(existingContent);
+            log:printInfo(string `  [download] oldHash(${otherFileName}): ${(<string>oldHash).substring(0, 16)}...`);
+        } else {
+            log:printInfo(string `  [download] no existing spec file found in version dir`);
         }
 
         if oldHash is string && !hasContentChanged(oldHash, newHash) {
-            log:printInfo(string `  [download] no change: ${vendor}/${apiId}@${versionFolder}`);
+            log:printInfo(string `  [download] SKIP — content unchanged for ${vendor}/${apiId}@${versionFolder}`);
             return [false, newHash];
         }
+        log:printInfo(string `  [download] content changed (or no prior file) — will replace`);
 
-        // Remove both spec formats before writing — handles format switches and
-        // avoids leaving stale files alongside the newly written spec.
         if targetExists {
+            log:printInfo(string `  [download] removing: ${specFile}`);
             check file:remove(specFile);
-            log:printInfo(string `  [download] removed old ${fileName}`);
+            log:printInfo(string `  [download] removed ${fileName}`);
         }
         if otherExists {
+            log:printInfo(string `  [download] removing: ${otherFile}`);
             check file:remove(otherFile);
             log:printInfo(string `  [download] removed stale ${otherFileName}`);
         }
 
-        log:printInfo(string `  [download] writing: ${specFile}`);
-        // Never touch .metadata.json when the version folder already exists
+        log:printInfo(string `  [download] writing new spec (metadata WILL NOT be touched)`);
     } else {
-        log:printInfo(string `  [download] creating version dir: ${versionDir}`);
+        log:printInfo(string `  [download] version dir does not exist — creating: ${versionDir}`);
         check file:createDir(versionDir, file:RECURSIVE);
+        log:printInfo(string `  [download] created dir: ${versionDir}`);
 
-        // Guard against createDir silently succeeding on an existing path
-        // (e.g. case-insensitive filesystem).
         boolean metaExists = check file:test(metaFile, file:EXISTS);
+        log:printInfo(string `  [download] EXISTS(.metadata.json) after createDir = ${metaExists}`);
         if !metaExists {
+            log:printInfo(string `  [download] creating .metadata.json`);
             string? baseUrl     = extractSpecBaseUrl(content);
             string? description = extractSpecDescription(content);
             string[] tags       = deriveTags(connectorName, vendor);
             check io:fileWriteString(metaFile, buildMetadataJson(connectorName, baseUrl, sourceUrl, description, tags));
-            log:printInfo(string `  [download] created .metadata.json for new folder: ${versionDir}`);
+            log:printInfo(string `  [download] created .metadata.json`);
+        } else {
+            log:printInfo(string `  [download] .metadata.json already exists — skipping creation`);
         }
     }
 
+    log:printInfo(string `  [download] writing spec: ${specFile}`);
     check io:fileWriteString(specFile, content);
     log:printInfo(string `  [download] saved: ${specFile}`);
 
