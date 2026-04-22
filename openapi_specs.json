@@ -1,11 +1,22 @@
 [
     {
-        "name": "HubSpot CRM Extensions Videoconferencing",
-        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection"
+        "name": "AI Azure",
+        "sourceUrl": "https://learn.microsoft.com/en-us/azure/ai-services/openai/reference"
     },
-
     {
-        "name": "PayPal Invoices",
-        "sourceUrl": "https://developer.paypal.com/docs/api/invoicing/v2/"
+        "name": "AI Ollama",
+        "sourceUrl": "https://github.com/ollama/ollama/blob/main/docs/api.md"
+    },
+    {
+        "name": "AI Mistral",
+        "sourceUrl": "https://docs.mistral.ai/api/"
+    },
+    {
+        "name": "Stripe",
+        "sourceUrl": "https://github.com/stripe/openapi"
+    },
+    {
+        "name": "Slack",
+        "sourceUrl": "https://github.com/slackapi/slack-api-specs"
     }
 ]
