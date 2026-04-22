@@ -31,7 +31,6 @@ public class OpenAPISpecValidator {
         try {
             ParseOptions opts = new ParseOptions();
             opts.setResolve(false);           // Don't try to resolve $ref URLs
-            opts.setResolveFully(false);
 
             SwaggerParseResult result = new OpenAPIParser()
                     .readContents(content, null, opts);

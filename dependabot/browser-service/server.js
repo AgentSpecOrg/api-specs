@@ -125,9 +125,6 @@ app.get("/fetch", async (req, res) => {
   }
 });
 
-// Health check
-app.get("/health", (_, res) => res.json({ status: "ok" }));
-
 app.listen(PORT, async () => {
   console.log(`Browser service listening on http://localhost:${PORT}`);
   // Pre-warm the browser
