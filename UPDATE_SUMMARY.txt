@@ -1,0 +1,5 @@
+twilio/twilio@v1.0.0: updated spec
+googleapis/sheets@v4: updated spec
+twitter/twitter@v2.62: updated spec
+salesforce/salesforce@v1.0.0: updated spec
+redis/redis@Version 1: updated spec

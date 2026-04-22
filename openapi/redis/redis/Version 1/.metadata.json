@@ -1,0 +1,7 @@
+{
+    "name": "Redis",
+    "baseUrl": "https://api.redislabs.com/v1",
+    "documentationUrl": "https://redis.io/docs/latest/commands/",
+    "description": "Redis Cloud API",
+    "tags": ["redis"]
+}

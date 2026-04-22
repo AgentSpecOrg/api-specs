@@ -1,0 +1,7 @@
+{
+    "name": "Salesforce",
+    "baseUrl": "https://anypoint.mulesoft.com/apimanager",
+    "documentationUrl": "https://developer.salesforce.com/docs/apis",
+    "description": "API Manager API",
+    "tags": ["salesforce"]
+}

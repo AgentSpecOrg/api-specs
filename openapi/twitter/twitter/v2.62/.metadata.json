@@ -1,0 +1,7 @@
+{
+    "name": "Twitter",
+    "baseUrl": "https://api.twitter.com",
+    "documentationUrl": "https://github.com/xdevplatform",
+    "description": "Twitter API v2 available endpoints",
+    "tags": ["twitter"]
+}

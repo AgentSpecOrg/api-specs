@@ -1,0 +1,7 @@
+{
+    "name": "GoogleAPIs Sheets",
+    "baseUrl": "https://sheets.googleapis.com/",
+    "documentationUrl": "https://developers.google.com/sheets/api/reference/rest",
+    "description": "Reads and writes Google Sheets.",
+    "tags": ["googleapis", "sheets"]
+}
