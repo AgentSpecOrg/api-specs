@@ -51,38 +51,42 @@ function downloadAndSaveSpec(
     boolean versionDirExists = check file:test(versionDir, file:EXISTS);
 
     if versionDirExists {
-        // Check for a spec in the same format first
+        // Always remove the opposite-format file if it exists, regardless of
+        // whether the target format file is already present.
+        string otherFileName = format == "json" ? "openapi.yaml" : "openapi.json";
+        string otherFile = string `${versionDir}/${otherFileName}`;
+        boolean otherExists = check file:test(otherFile, file:EXISTS);
+        if otherExists {
+            check file:remove(otherFile);
+            log:printInfo(string `  [download] removed stale ${otherFileName}`);
+        }
+
+        // Hash-check the same-format file to skip unchanged content
         boolean targetExists = check file:test(specFile, file:EXISTS);
-        if targetExists {
+        if targetExists && !otherExists {
             if !hasContentChanged(existingHash, newHash) {
                 log:printInfo(string `  [download] no change: ${vendor}/${apiId}@${versionFolder}`);
                 return [false, newHash];
             }
             log:printInfo(string `  [download] content changed — overwriting: ${specFile}`);
         } else {
-            // Check if the opposite format exists (format may have changed)
-            string otherFileName = format == "json" ? "openapi.yaml" : "openapi.json";
-            string otherFile = string `${versionDir}/${otherFileName}`;
-            boolean otherExists = check file:test(otherFile, file:EXISTS);
-            if otherExists {
-                // Remove the stale opposite-format file before writing the new one
-                check file:remove(otherFile);
-                log:printInfo(string `  [download] format changed — removed ${otherFileName}, writing ${fileName}`);
-            } else {
-                log:printInfo(string `  [download] new file in existing version dir: ${specFile}`);
-            }
+            log:printInfo(string `  [download] writing: ${specFile}`);
         }
         // Never touch .metadata.json when the version folder already exists
     } else {
         log:printInfo(string `  [download] creating version dir: ${versionDir}`);
         check file:createDir(versionDir, file:RECURSIVE);
 
-        // Generate .metadata.json only for the new folder
-        string? baseUrl     = extractSpecBaseUrl(content);
-        string? description = extractSpecDescription(content);
-        string[] tags       = deriveTags(connectorName, vendor);
-        check io:fileWriteString(metaFile, buildMetadataJson(connectorName, baseUrl, sourceUrl, description, tags));
-        log:printInfo(string `  [download] created .metadata.json for new folder: ${versionDir}`);
+        // Generate .metadata.json only if this is truly a new folder (guard
+        // against re-entry in case createDir succeeded on an existing path).
+        boolean metaExists = check file:test(metaFile, file:EXISTS);
+        if !metaExists {
+            string? baseUrl     = extractSpecBaseUrl(content);
+            string? description = extractSpecDescription(content);
+            string[] tags       = deriveTags(connectorName, vendor);
+            check io:fileWriteString(metaFile, buildMetadataJson(connectorName, baseUrl, sourceUrl, description, tags));
+            log:printInfo(string `  [download] created .metadata.json for new folder: ${versionDir}`);
+        }
     }
 
     check io:fileWriteString(specFile, content);
