@@ -27,7 +27,6 @@ function downloadAndSaveSpec(
     string vendor,
     string apiId,
     string openApiDir,
-    string? existingHash,
     string connectorName,
     string sourceUrl
 ) returns [boolean, string]|error {
@@ -38,6 +37,8 @@ function downloadAndSaveSpec(
     string specDir    = string `${openApiDir}/${vendor}/${apiId}`;
     string versionDir = string `${specDir}/${versionFolder}`;
     string specFile   = string `${versionDir}/${fileName}`;
+    string otherFileName = format == "json" ? "openapi.yaml" : "openapi.json";
+    string otherFile = string `${versionDir}/${otherFileName}`;
     string metaFile   = string `${versionDir}/.metadata.json`;
 
     log:printInfo(string `  [download] fetching: ${specUrl}`);
@@ -51,27 +52,36 @@ function downloadAndSaveSpec(
     boolean versionDirExists = check file:test(versionDir, file:EXISTS);
 
     if versionDirExists {
-        // Always remove the opposite-format file if it exists, regardless of
-        // whether the target format file is already present.
-        string otherFileName = format == "json" ? "openapi.yaml" : "openapi.json";
-        string otherFile = string `${versionDir}/${otherFileName}`;
+        // Compare against the ACTUAL file currently on disk in the version folder.
+        // This avoids stale openapi_specs.json hashes causing false "no change".
+        boolean targetExists = check file:test(specFile, file:EXISTS);
         boolean otherExists = check file:test(otherFile, file:EXISTS);
+
+        string? oldHash = ();
+        if targetExists {
+            string existingContent = check io:fileReadString(specFile);
+            oldHash = calculateHash(existingContent);
+        } else if otherExists {
+            string existingContent = check io:fileReadString(otherFile);
+            oldHash = calculateHash(existingContent);
+        }
+
+        if oldHash is string && !hasContentChanged(oldHash, newHash) {
+            log:printInfo(string `  [download] no change: ${vendor}/${apiId}@${versionFolder}`);
+            return [false, newHash];
+        }
+
+        // Existing version folder: replace spec file(s), but never touch metadata.
+        if targetExists {
+            check file:remove(specFile);
+            log:printInfo(string `  [download] removed old ${fileName}`);
+        }
         if otherExists {
             check file:remove(otherFile);
             log:printInfo(string `  [download] removed stale ${otherFileName}`);
         }
 
-        // Hash-check the same-format file to skip unchanged content
-        boolean targetExists = check file:test(specFile, file:EXISTS);
-        if targetExists && !otherExists {
-            if !hasContentChanged(existingHash, newHash) {
-                log:printInfo(string `  [download] no change: ${vendor}/${apiId}@${versionFolder}`);
-                return [false, newHash];
-            }
-            log:printInfo(string `  [download] content changed — overwriting: ${specFile}`);
-        } else {
-            log:printInfo(string `  [download] writing: ${specFile}`);
-        }
+        log:printInfo(string `  [download] writing: ${specFile}`);
         // Never touch .metadata.json when the version folder already exists
     } else {
         log:printInfo(string `  [download] creating version dir: ${versionDir}`);

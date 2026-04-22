@@ -116,7 +116,6 @@ public function main() returns error? {
 
         string? knownUrl  = r.specUrl;
         string? knownRepo = r.specRepo;
-        string? prevHash  = r.contentHash;
         string? prevFreq  = r.frequency;
 
         // ── Frequency skip check ──────────────────────────────────────────────
@@ -158,7 +157,7 @@ public function main() returns error? {
             string fmt      = entry.format ?: "json";
 
             [boolean, string]|error downloadResult = downloadAndSaveSpec(
-                specUrl, fmt, entry.apiVersion, vendor, apiId, specDir, prevHash, c.name, c.sourceUrl
+                specUrl, fmt, entry.apiVersion, vendor, apiId, specDir, c.name, c.sourceUrl
             );
 
             if downloadResult is [boolean, string] {
