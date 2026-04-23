@@ -2,9 +2,9 @@
 // Entry point — runs the agent for each connector SEQUENTIALLY, one at a time.
 //
 // Paths (relative to the dependabot/ working directory):
-//   Output file  : ../openapi_specs.json  (repo root)
+//   Output file  : ../openapi/openapi_specs.json
 //   OpenAPI dir  : ../openapi             (repo root)
-//   Summary file : ../UPDATE_SUMMARY.txt  (repo root, picked up by workflow)
+//   Summary file : ../openapi/UPDATE_SUMMARY.json  (picked up by workflow)
 //
 // Frequency logic:
 //   Each entry in openapi_specs.json has a "frequency" field.
@@ -25,7 +25,7 @@ import ballerina/os;
 import ballerina/time;
 import ballerina/file;
 
-configurable string outputFile = "../openapi_specs.json";
+configurable string outputFile = "../openapi/openapi_specs.json";
 configurable string openApiDir = "../openapi";
 
 const string BAR  = "================================================================";
@@ -105,9 +105,8 @@ public function main() returns error? {
     int notFound = 0;
     int skipped = 0;
     int total = connectors.length();
-    string[] updateLines = [];
-    string[] malformedLines = [];
-    string[] connectorUpdateJsonLines = [];
+    string[] updatedEntries = [];
+    string[] malformedEntries = [];
 
     // ── Sequential loop ───────────────────────────────────────────────────────
     int idx = 0;
@@ -170,10 +169,8 @@ public function main() returns error? {
                     string versionLabel = entry.apiVersion is string
                         ? normalizeVersion(entry.apiVersion ?: "")
                         : "latest";
-                    string updateLine = string `${vendor}/${apiId}@${versionLabel}: updated spec`;
-                    updateLines.push(updateLine);
                     string connRepo = r.connectorRepo ?: "";
-                    connectorUpdateJsonLines.push(string `{"vendor":"${jsonEsc(vendor)}","apiId":"${jsonEsc(apiId)}","version":"${jsonEsc(versionLabel)}","connectorRepo":"${jsonEsc(connRepo)}"}`);
+                    updatedEntries.push(string `{"name":"${jsonEsc(c.name)}","vendor":"${jsonEsc(vendor)}","apiId":"${jsonEsc(apiId)}","version":"${jsonEsc(versionLabel)}","connectorRepo":"${jsonEsc(connRepo)}"}`);
                     io:println(string `         => downloaded to openapi/${vendor}/${apiId}/${versionLabel}/`);
                 } else {
                     io:println(string `         => no content change (hash match)`);
@@ -189,7 +186,7 @@ public function main() returns error? {
             string versionLabel = entry.apiVersion is string
                 ? normalizeVersion(entry.apiVersion ?: "")
                 : "unknown";
-            malformedLines.push(string `{"name":"${jsonEsc(c.name)}","version":"${jsonEsc(versionLabel)}","reason":"${jsonEsc(entry.validationError ?: "rejected by swagger parser")}"}`);
+            malformedEntries.push(string `{"name":"${jsonEsc(c.name)}","version":"${jsonEsc(versionLabel)}","reason":"${jsonEsc(entry.validationError ?: "rejected by swagger parser")}"}`);
         } else {
             notFound += 1;
             io:println(string `${progress} FAIL   ${label}  [${entry.elapsedSeconds}s]`);
@@ -211,80 +208,45 @@ public function main() returns error? {
     decimal elapsed = rd(time:utcDiffSeconds(time:utcNow(), runStart));
     io:println(BAR);
     io:println(string `  Done in ${<int>elapsed}s`);
-    io:println(string `  found=${found}  malformed=${malformedCount}  not_found=${notFound}  skipped=${skipped}  total=${total}`);
+    io:println(string `  found=${found}  malformed=${malformedCount}  not_found=${notFound}  skipped=${skipped}  total=${total}  (${updatedEntries.length()} downloaded)`);
     io:println(string `  Saved to ${outFile}`);
     io:println(BAR);
 
-    // ── Write UPDATE_SUMMARY.txt ──────────────────────────────────────────────
-    if updateLines.length() > 0 {
-        string summaryPath = "../UPDATE_SUMMARY.txt";
-        string summaryContent = "";
-        foreach string line in updateLines {
-            summaryContent += line + "\n";
+    // ── Write openapi/UPDATE_SUMMARY.json ────────────────────────────────────
+    string summaryPath = "../openapi/UPDATE_SUMMARY.json";
+    if updatedEntries.length() > 0 || malformedEntries.length() > 0 {
+        string updatedSection = "[\n";
+        boolean firstU = true;
+        foreach string line in updatedEntries {
+            if !firstU { updatedSection += ",\n"; }
+            updatedSection += "    " + line;
+            firstU = false;
         }
-        error? writeErr = io:fileWriteString(summaryPath, summaryContent);
+        updatedSection += "\n  ]";
+
+        string malformedSection = "[\n";
+        boolean firstM = true;
+        foreach string line in malformedEntries {
+            if !firstM { malformedSection += ",\n"; }
+            malformedSection += "    " + line;
+            firstM = false;
+        }
+        malformedSection += "\n  ]";
+
+        string content = "{\n  \"updated\": " + updatedSection + ",\n  \"malformed\": " + malformedSection + "\n}\n";
+        error? writeErr = io:fileWriteString(summaryPath, content);
         if writeErr is error {
-            log:printError(string `Failed to write UPDATE_SUMMARY.txt: ${writeErr.message()}`);
+            log:printError(string `Failed to write UPDATE_SUMMARY.json: ${writeErr.message()}`);
         } else {
             io:println(string `  Update summary written to ${summaryPath}`);
-            io:println(string `  ${updateLines.length()} spec(s) updated`);
+            io:println(string `  ${updatedEntries.length()} updated, ${malformedEntries.length()} malformed`);
         }
     } else {
-        // Remove stale UPDATE_SUMMARY.txt if it exists
-        boolean exists = check file:test("../UPDATE_SUMMARY.txt", file:EXISTS);
+        boolean exists = check file:test(summaryPath, file:EXISTS);
         if exists {
-            check file:remove("../UPDATE_SUMMARY.txt");
+            check file:remove(summaryPath);
         }
-        io:println("  No spec updates — UPDATE_SUMMARY.txt removed (if present)");
-    }
-
-    // ── Write MALFORMED_SPECS.txt ─────────────────────────────────────────────
-    string malformedPath = "../MALFORMED_SPECS.txt";
-    if malformedLines.length() > 0 {
-        string malformedContent = "[\n";
-        boolean firstLine = true;
-        foreach string line in malformedLines {
-            if !firstLine { malformedContent += ",\n"; }
-            malformedContent += "  " + line;
-            firstLine = false;
-        }
-        malformedContent += "\n]\n";
-        error? mErr = io:fileWriteString(malformedPath, malformedContent);
-        if mErr is error {
-            log:printError(string `Failed to write MALFORMED_SPECS.txt: ${mErr.message()}`);
-        } else {
-            io:println(string `  Malformed specs written to ${malformedPath}`);
-            io:println(string `  ${malformedLines.length()} malformed spec(s) found`);
-        }
-    } else {
-        boolean mExists = check file:test(malformedPath, file:EXISTS);
-        if mExists {
-            check file:remove(malformedPath);
-        }
-    }
-
-    // ── Write CONNECTORS_UPDATE.json ──────────────────────────────────────────
-    string connUpdatePath = "../CONNECTORS_UPDATE.json";
-    if connectorUpdateJsonLines.length() > 0 {
-        string connUpdateContent = "[\n";
-        boolean firstCu = true;
-        foreach string line in connectorUpdateJsonLines {
-            if !firstCu { connUpdateContent += ",\n"; }
-            connUpdateContent += "  " + line;
-            firstCu = false;
-        }
-        connUpdateContent += "\n]\n";
-        error? cuErr = io:fileWriteString(connUpdatePath, connUpdateContent);
-        if cuErr is error {
-            log:printError(string `Failed to write CONNECTORS_UPDATE.json: ${cuErr.message()}`);
-        } else {
-            io:println(string `  Connector update list written to ${connUpdatePath}`);
-        }
-    } else {
-        boolean cuExists = check file:test(connUpdatePath, file:EXISTS);
-        if cuExists {
-            check file:remove(connUpdatePath);
-        }
+        io:println("  No spec updates — UPDATE_SUMMARY.json removed (if present)");
     }
 }
 
