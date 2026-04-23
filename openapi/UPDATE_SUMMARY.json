@@ -1,0 +1,8 @@
+{
+  "updated": [
+    {"name":"HubSpot CRM Associations","vendor":"hubspot","apiId":"crm.associations","version":"v4","connectorRepo":"orgBBalLib/module-ballerinax-hubspot.crm.associations"}
+  ],
+  "malformed": [
+
+  ]
+}
