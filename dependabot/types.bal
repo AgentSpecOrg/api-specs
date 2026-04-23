@@ -9,13 +9,16 @@ public type SpecResult record {|
     string? specRepo;
     string? apiVersion;
     string format;
+    boolean malformed = false;
+    string? validationError = ();
 |};
 
 // All fields except name and sourceUrl have defaults so that a user can add a
-// new entry to openapi_specs.json with just {"name":"…","sourceUrl":"…"}.
+// new entry to openapi_specs.json with just {"name":"…","sourceUrl":"…","connectorRepo":"…"}.
 public type ResultEntry record {|
     string name;
     string sourceUrl;
+    string? connectorRepo = ();
     string? targetTitle = ();
     string? specUrl = ();
     string? specRepo = ();
@@ -26,6 +29,7 @@ public type ResultEntry record {|
     string checkedAt = "";
     decimal elapsedSeconds = 0.0d;
     string? contentHash = ();
+    string? validationError = ();
 |};
 
 // Output of the discovery step

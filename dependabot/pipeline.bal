@@ -970,6 +970,8 @@ public function stepContentVerify(
         log:printDebug(string `  [step4:debug] java validation: valid=${valid} detail=${detail} url=${candidateUrl}`);
 
         boolean accepted = false;
+        boolean malformedAccept = false;
+        string? rejectReason = ();
 
         if detail == "java-validator-unavailable" {
             if looksLikeSpec(body) {
@@ -987,19 +989,22 @@ public function stepContentVerify(
             if looksLikeSpec(body) {
                 log:printWarn(string `  [step4] heuristic override — Java parser rejected but content looks like a spec: ${candidateUrl}`);
                 accepted = true;
+                malformedAccept = true;
+                rejectReason = detail;
             } else {
                 log:printDebug(string `  [step4:debug] body snippet: ${body.substring(0, body.length() > 300 ? 300 : body.length())}`);
             }
         }
 
         if accepted {
-            // Extract title and apiVersion from the validated content
             string? extractedVersion = extractSpecMetadata(body);
             return {
-                specUrl:    candidateUrl,
-                specRepo:   discovery.specRepo,
-                apiVersion: extractedVersion,
-                format:     fmt
+                specUrl:         candidateUrl,
+                specRepo:        discovery.specRepo,
+                apiVersion:      extractedVersion,
+                format:          fmt,
+                malformed:       malformedAccept,
+                validationError: rejectReason
             };
         }
     }

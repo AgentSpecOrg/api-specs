@@ -1,6 +1,7 @@
 [
     {
         "name": "HubSpot CRM Associations",
-        "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations"
+        "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations",
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations"
     }
 ]

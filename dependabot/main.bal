@@ -101,10 +101,13 @@ public function main() returns error? {
 
     time:Utc runStart = time:utcNow();
     int found = 0;
+    int malformedCount = 0;
     int notFound = 0;
     int skipped = 0;
     int total = connectors.length();
     string[] updateLines = [];
+    string[] malformedLines = [];
+    string[] connectorUpdateJsonLines = [];
 
     // ── Sequential loop ───────────────────────────────────────────────────────
     int idx = 0;
@@ -143,6 +146,7 @@ public function main() returns error? {
 
         // Preserve frequency from the existing entry
         entry.frequency = prevFreq;
+        entry.connectorRepo = r.connectorRepo;
 
         if entry.status == "found" {
             found += 1;
@@ -168,6 +172,8 @@ public function main() returns error? {
                         : "latest";
                     string updateLine = string `${vendor}/${apiId}@${versionLabel}: updated spec`;
                     updateLines.push(updateLine);
+                    string connRepo = r.connectorRepo ?: "";
+                    connectorUpdateJsonLines.push(string `{"vendor":"${jsonEsc(vendor)}","apiId":"${jsonEsc(apiId)}","version":"${jsonEsc(versionLabel)}","connectorRepo":"${jsonEsc(connRepo)}"}`);
                     io:println(string `         => downloaded to openapi/${vendor}/${apiId}/${versionLabel}/`);
                 } else {
                     io:println(string `         => no content change (hash match)`);
@@ -175,6 +181,15 @@ public function main() returns error? {
             } else {
                 log:printWarn(string `${progress} download failed: ${downloadResult.message()}`);
             }
+        } else if entry.status == "found_malformed" {
+            malformedCount += 1;
+            io:println(string `${progress} MALFORMED  ${label}`);
+            io:println(string `         => ${entry.specUrl ?: ""}  version=${entry.apiVersion ?: "?"}`);
+            io:println(string `         => heuristic accepted but swagger parser rejected: ${entry.validationError ?: "unknown reason"}`);
+            string versionLabel = entry.apiVersion is string
+                ? normalizeVersion(entry.apiVersion ?: "")
+                : "unknown";
+            malformedLines.push(string `{"name":"${jsonEsc(c.name)}","version":"${jsonEsc(versionLabel)}","reason":"${jsonEsc(entry.validationError ?: "rejected by swagger parser")}"}`);
         } else {
             notFound += 1;
             io:println(string `${progress} FAIL   ${label}  [${entry.elapsedSeconds}s]`);
@@ -196,7 +211,7 @@ public function main() returns error? {
     decimal elapsed = rd(time:utcDiffSeconds(time:utcNow(), runStart));
     io:println(BAR);
     io:println(string `  Done in ${<int>elapsed}s`);
-    io:println(string `  found=${found}  not_found=${notFound}  skipped=${skipped}  total=${total}`);
+    io:println(string `  found=${found}  malformed=${malformedCount}  not_found=${notFound}  skipped=${skipped}  total=${total}`);
     io:println(string `  Saved to ${outFile}`);
     io:println(BAR);
 
@@ -221,6 +236,55 @@ public function main() returns error? {
             check file:remove("../UPDATE_SUMMARY.txt");
         }
         io:println("  No spec updates — UPDATE_SUMMARY.txt removed (if present)");
+    }
+
+    // ── Write MALFORMED_SPECS.txt ─────────────────────────────────────────────
+    string malformedPath = "../MALFORMED_SPECS.txt";
+    if malformedLines.length() > 0 {
+        string malformedContent = "[\n";
+        boolean firstLine = true;
+        foreach string line in malformedLines {
+            if !firstLine { malformedContent += ",\n"; }
+            malformedContent += "  " + line;
+            firstLine = false;
+        }
+        malformedContent += "\n]\n";
+        error? mErr = io:fileWriteString(malformedPath, malformedContent);
+        if mErr is error {
+            log:printError(string `Failed to write MALFORMED_SPECS.txt: ${mErr.message()}`);
+        } else {
+            io:println(string `  Malformed specs written to ${malformedPath}`);
+            io:println(string `  ${malformedLines.length()} malformed spec(s) found`);
+        }
+    } else {
+        boolean mExists = check file:test(malformedPath, file:EXISTS);
+        if mExists {
+            check file:remove(malformedPath);
+        }
+    }
+
+    // ── Write CONNECTORS_UPDATE.json ──────────────────────────────────────────
+    string connUpdatePath = "../CONNECTORS_UPDATE.json";
+    if connectorUpdateJsonLines.length() > 0 {
+        string connUpdateContent = "[\n";
+        boolean firstCu = true;
+        foreach string line in connectorUpdateJsonLines {
+            if !firstCu { connUpdateContent += ",\n"; }
+            connUpdateContent += "  " + line;
+            firstCu = false;
+        }
+        connUpdateContent += "\n]\n";
+        error? cuErr = io:fileWriteString(connUpdatePath, connUpdateContent);
+        if cuErr is error {
+            log:printError(string `Failed to write CONNECTORS_UPDATE.json: ${cuErr.message()}`);
+        } else {
+            io:println(string `  Connector update list written to ${connUpdatePath}`);
+        }
+    } else {
+        boolean cuExists = check file:test(connUpdatePath, file:EXISTS);
+        if cuExists {
+            check file:remove(connUpdatePath);
+        }
     }
 }
 
@@ -372,12 +436,13 @@ function processConnector(
             specUrl:        finalResult.specUrl,
             specRepo:       finalResult.specRepo,
             apiVersion:     finalResult.apiVersion,
-            format:         finalResult.format,
-            frequency:      (),      // set by caller after return
-            status:         "found",
-            checkedAt:      time:utcToString(time:utcNow()),
-            elapsedSeconds: elapsed,
-            contentHash:    ()       // set by caller after download
+            format:          finalResult.format,
+            frequency:       (),      // set by caller after return
+            status:          finalResult.malformed ? "found_malformed" : "found",
+            checkedAt:       time:utcToString(time:utcNow()),
+            elapsedSeconds:  elapsed,
+            contentHash:     (),      // set by caller after download
+            validationError: finalResult.validationError
         };
     } else {
         return {

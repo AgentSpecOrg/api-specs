@@ -112,6 +112,8 @@ jobs:
           echo "Creating branch: ${BRANCH_NAME}"
           git checkout -b "${BRANCH_NAME}"
           git add openapi/ openapi_specs.json UPDATE_SUMMARY.txt
+          [ -f "MALFORMED_SPECS.txt" ] && git add MALFORMED_SPECS.txt || true
+          [ -f "CONNECTORS_UPDATE.json" ] && git add CONNECTORS_UPDATE.json || true
           if git diff --staged --quiet; then
             echo "No changes to commit"
             echo "UPDATES_FOUND=false" >> $GITHUB_ENV
@@ -156,8 +158,7 @@ jobs:
             --title "$PR_TITLE" \
             --body "$PR_BODY" \
             --base main \
-            --head "$BRANCH_NAME" \
-            --label "openapi-update,automated,dependencies")
+            --head "$BRANCH_NAME")
 
           echo "Pull Request created: $PR_URL"
           PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
@@ -181,7 +182,9 @@ jobs:
           for file in $CHANGED_FILES; do
             if [[ ! "$file" =~ ^openapi/ ]] && \
                [[ "$file" != "openapi_specs.json" ]] && \
-               [[ "$file" != "UPDATE_SUMMARY.txt" ]]; then
+               [[ "$file" != "UPDATE_SUMMARY.txt" ]] && \
+               [[ "$file" != "MALFORMED_SPECS.txt" ]] && \
+               [[ "$file" != "CONNECTORS_UPDATE.json" ]]; then
               echo "Unexpected file change: $file"
               VALID=false
             fi
@@ -343,6 +346,7 @@ jobs:
               });
 
               core.setOutput("merged", "true");
+              core.exportVariable("MERGE_SUCCESSFUL", "true");
             } catch (error) {
               console.error("Failed to merge PR:", error);
               await github.rest.issues.createComment({
@@ -380,45 +384,83 @@ jobs:
 
       # ── Trigger connector regeneration ────────────────────────────────────────
 
-      - name: Trigger Connector Regeneration
+      - name: Prepare connector update payload
         if: env.UPDATES_FOUND == 'true' && steps.merge_pr.outputs.merged == 'true' && env.ENABLE_CONNECTOR_REGEN == 'true'
+        id: prepare_payload
+        run: |
+          echo "Preparing connector update payload..."
+
+          CONNECTORS_JSON="[]"
+          CONNECTOR_COUNT=0
+
+          if [ -f "CONNECTORS_UPDATE.json" ]; then
+            echo "Reading CONNECTORS_UPDATE.json:"
+            cat CONNECTORS_UPDATE.json
+            echo ""
+
+            while IFS= read -r entry; do
+              [ -z "$entry" ] && continue
+
+              CONNECTOR_REPO=$(echo "$entry" | jq -r '.connectorRepo // empty')
+              VENDOR=$(echo "$entry" | jq -r '.vendor')
+              API_ID=$(echo "$entry" | jq -r '.apiId')
+              VERSION=$(echo "$entry" | jq -r '.version')
+
+              if [ -z "$CONNECTOR_REPO" ]; then
+                echo "Warning: no connectorRepo for $VENDOR/$API_ID@$VERSION — skipping"
+                continue
+              fi
+
+              SPEC_URL_BASE="https://raw.githubusercontent.com/${{ github.repository }}/main/openapi/${VENDOR}/${API_ID}/${VERSION}"
+              SPEC_URL="${SPEC_URL_BASE}/openapi.json"
+              if ! curl -sf --head "$SPEC_URL" > /dev/null 2>&1; then
+                SPEC_URL="${SPEC_URL_BASE}/openapi.yaml"
+              fi
+
+              ITEM=$(jq -n --arg repo "$CONNECTOR_REPO" --arg url "$SPEC_URL" \
+                '{"connectorRepo": $repo, "specUrl": $url}')
+              CONNECTORS_JSON=$(echo "$CONNECTORS_JSON" | jq --argjson item "$ITEM" '. + [$item]')
+              CONNECTOR_COUNT=$((CONNECTOR_COUNT + 1))
+              echo "Added: $CONNECTOR_REPO -> $SPEC_URL"
+            done < <(jq -c '.[]' CONNECTORS_UPDATE.json)
+          fi
+
+          MALFORMED_SPECS="[]"
+          MALFORMED_COUNT=0
+          if [ -f "MALFORMED_SPECS.txt" ]; then
+            MALFORMED_SPECS=$(cat MALFORMED_SPECS.txt)
+            MALFORMED_COUNT=$(echo "$MALFORMED_SPECS" | jq 'length')
+          fi
+
+          echo "connector_count=$CONNECTOR_COUNT" >> $GITHUB_OUTPUT
+          echo "malformed_count=$MALFORMED_COUNT" >> $GITHUB_OUTPUT
+
+          # Write dispatch payload to file to avoid multi-line interpolation issues
+          jq -n \
+            --argjson connectors "$CONNECTORS_JSON" \
+            --argjson malformed "$MALFORMED_SPECS" \
+            '{"event_type": "connector-update", "client_payload": {"connectors": $connectors, "malformed_specs": $malformed}}' \
+            > /tmp/dispatch_payload.json
+
+          echo "Payload ready: $CONNECTOR_COUNT connector(s), $MALFORMED_COUNT malformed spec(s)"
+          echo "Dispatch payload:"
+          cat /tmp/dispatch_payload.json
+
+      - name: Trigger ballerina-library connector orchestration workflow
+        if: >
+          env.UPDATES_FOUND == 'true' &&
+          steps.merge_pr.outputs.merged == 'true' &&
+          env.ENABLE_CONNECTOR_REGEN == 'true' &&
+          (steps.prepare_payload.outputs.connector_count != '0' ||
+           steps.prepare_payload.outputs.malformed_count != '0')
         env:
           GH_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
         run: |
-          echo "Triggering connector regeneration..."
-
-          if [ ! -f "UPDATE_SUMMARY.txt" ]; then
-            echo "UPDATE_SUMMARY.txt not found, skipping"
-            exit 0
-          fi
-
-          echo "UPDATE_SUMMARY.txt:"
-          cat UPDATE_SUMMARY.txt
-          echo ""
-
-          while IFS= read -r line || [ -n "$line" ]; do
-            echo "Processing: $line"
-
-            if echo "$line" | grep -qE "^.+/.+@.+:"; then
-              # Format: vendor/apiId@version: updated spec
-              SPEC_PATH=$(echo "$line" | sed 's/@.*//')
-              VERSION_DIR=$(echo "$line" | sed 's/.*@//' | sed 's/:.*//')
-              VENDOR=$(echo "$SPEC_PATH" | cut -d'/' -f1)
-              API=$(echo "$SPEC_PATH" | cut -d'/' -f2)
-
-              echo "Detected update for: $VENDOR/$API@$VERSION_DIR"
-
-              SPEC_URL="https://raw.githubusercontent.com/${{ github.repository }}/main/openapi/${VENDOR}/${API}/${VERSION_DIR}/openapi.json"
-              # Try yaml if json doesn't exist
-              if ! curl -s --head "$SPEC_URL" | grep -q "200 OK"; then
-                SPEC_URL="https://raw.githubusercontent.com/${{ github.repository }}/main/openapi/${VENDOR}/${API}/${VERSION_DIR}/openapi.yaml"
-              fi
-
-              echo "Spec URL: $SPEC_URL"
-            fi
-          done < UPDATE_SUMMARY.txt
-
-          echo "Connector regeneration triggers complete"
+          echo "Triggering connector orchestration workflow..."
+          gh api repos/orgBBalLib/ballerina-library/dispatches \
+            --method POST \
+            --input /tmp/dispatch_payload.json
+          echo "Orchestration workflow triggered successfully"
 
       - name: Notify on failure
         if: failure() && env.UPDATES_FOUND == 'true' && env.PR_NUMBER != ''
