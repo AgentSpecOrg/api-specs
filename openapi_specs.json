@@ -1,11 +1,6 @@
 [
     {
-        "name": "HubSpot CRM Extensions Videoconferencing",
-        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection"
-    },
-
-    {
-        "name": "PayPal Invoices",
-        "sourceUrl": "https://developer.paypal.com/docs/api/invoicing/v2/"
+        "name": "HubSpot CRM Associations",
+        "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations"
     }
 ]
