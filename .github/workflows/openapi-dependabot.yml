@@ -418,8 +418,12 @@ jobs:
                 SPEC_URL="${SPEC_URL_BASE}/openapi.yaml"
               fi
 
-              ITEM=$(jq -n --arg repo "$CONNECTOR_REPO" --arg url "$SPEC_URL" \
-                '{"connectorRepo": $repo, "specUrl": $url}')
+              ITEM=$(jq -n \
+                --arg repo "$CONNECTOR_REPO" \
+                --arg spec "${VENDOR}/${API_ID}" \
+                --arg ver "$VERSION" \
+                --arg url "$SPEC_URL" \
+                '{"repository": $repo, "specification": $spec, "version": $ver, "openapi_url": $url}')
               CONNECTORS_JSON=$(echo "$CONNECTORS_JSON" | jq --argjson item "$ITEM" '. + [$item]')
               CONNECTOR_COUNT=$((CONNECTOR_COUNT + 1))
               echo "Added: $CONNECTOR_REPO -> $SPEC_URL"
@@ -436,7 +440,7 @@ jobs:
           jq -n \
             --argjson connectors "$CONNECTORS_JSON" \
             --argjson malformed "$MALFORMED_SPECS" \
-            '{"event_type": "connector-update", "client_payload": {"connectors": $connectors, "malformed_specs": $malformed}}' \
+            '{"event_type": "orchestrate-connector-updates", "client_payload": {"connectors": $connectors, "malformed_specs": $malformed}}' \
             > /tmp/dispatch_payload.json
 
           echo "Payload ready: $CONNECTOR_COUNT connector(s), $MALFORMED_COUNT malformed spec(s)"
