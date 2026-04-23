@@ -228,9 +228,7 @@ jobs:
             echo "Checking: $file"
 
             if [ ! -f "$file" ]; then
-              echo "File not found: $file"
-              VALIDATION_PASSED=false
-              VALIDATION_ERRORS="${VALIDATION_ERRORS}\n- File not found: $file"
+              echo "File was deleted (skipping validation): $file"
               continue
             fi
 
