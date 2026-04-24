@@ -1,7 +1,7 @@
 # This workflow runs daily to check for updates to OpenAPI specifications.
 # The Ballerina agent (dependabot/) discovers the latest spec URLs, downloads
 # the specs to openapi/, writes openapi/openapi_specs.json, and produces
-# openapi/UPDATE_SUMMARY.json when changes are detected.
+# UPDATE_SUMMARY.json (repo root, never committed) when changes are detected.
 #
 # If updates are found the workflow:
 #   1. Creates a branch and commits the changes (everything under openapi/).
@@ -95,10 +95,10 @@ jobs:
 
       - name: Check for updates
         run: |
-          if [ -f "openapi/UPDATE_SUMMARY.json" ]; then
+          if [ -f "UPDATE_SUMMARY.json" ]; then
             echo "UPDATES_FOUND=true" >> $GITHUB_ENV
             echo "Updates detected:"
-            cat openapi/UPDATE_SUMMARY.json
+            cat UPDATE_SUMMARY.json
           else
             echo "UPDATES_FOUND=false" >> $GITHUB_ENV
             echo "No updates found"
@@ -125,10 +125,10 @@ jobs:
       - name: Create Pull Request
         if: env.UPDATES_FOUND == 'true'
         run: |
-          UPDATED_LIST=$(jq -r '.updated[] | "- \(.name) (\(.vendor)/\(.apiId)@\(.version))"' openapi/UPDATE_SUMMARY.json 2>/dev/null || echo "")
-          MALFORMED_LIST=$(jq -r '.malformed[] | "- \(.name) v\(.version): \(.reason)"' openapi/UPDATE_SUMMARY.json 2>/dev/null || echo "")
-          UPDATED_COUNT=$(jq '.updated | length' openapi/UPDATE_SUMMARY.json 2>/dev/null || echo "0")
-          MALFORMED_COUNT=$(jq '.malformed | length' openapi/UPDATE_SUMMARY.json 2>/dev/null || echo "0")
+          UPDATED_LIST=$(jq -r '.updated[] | "- \(.name) (\(.vendor)/\(.apiId)@\(.version))"' UPDATE_SUMMARY.json 2>/dev/null || echo "")
+          MALFORMED_LIST=$(jq -r '.malformed[] | "- \(.name) v\(.version): \(.reason)"' UPDATE_SUMMARY.json 2>/dev/null || echo "")
+          UPDATED_COUNT=$(jq '.updated | length' UPDATE_SUMMARY.json 2>/dev/null || echo "0")
+          MALFORMED_COUNT=$(jq '.malformed | length' UPDATE_SUMMARY.json 2>/dev/null || echo "0")
 
           {
             echo "## OpenAPI Specification Updates"
@@ -394,9 +394,9 @@ jobs:
           MALFORMED_SPECS="[]"
           MALFORMED_COUNT=0
 
-          if [ -f "openapi/UPDATE_SUMMARY.json" ]; then
-            echo "Reading openapi/UPDATE_SUMMARY.json:"
-            cat openapi/UPDATE_SUMMARY.json
+          if [ -f "UPDATE_SUMMARY.json" ]; then
+            echo "Reading UPDATE_SUMMARY.json:"
+            cat UPDATE_SUMMARY.json
             echo ""
 
             while IFS= read -r entry; do
@@ -427,9 +427,9 @@ jobs:
               CONNECTORS_JSON=$(echo "$CONNECTORS_JSON" | jq --argjson item "$ITEM" '. + [$item]')
               CONNECTOR_COUNT=$((CONNECTOR_COUNT + 1))
               echo "Added: $CONNECTOR_REPO -> $SPEC_URL"
-            done < <(jq -c '.updated[]' openapi/UPDATE_SUMMARY.json)
+            done < <(jq -c '.updated[]' UPDATE_SUMMARY.json)
 
-            MALFORMED_SPECS=$(jq '.malformed' openapi/UPDATE_SUMMARY.json)
+            MALFORMED_SPECS=$(jq '.malformed' UPDATE_SUMMARY.json)
             MALFORMED_COUNT=$(echo "$MALFORMED_SPECS" | jq 'length')
           fi
 

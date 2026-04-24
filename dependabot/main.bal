@@ -4,7 +4,7 @@
 // Paths (relative to the dependabot/ working directory):
 //   Output file  : ../openapi/openapi_specs.json
 //   OpenAPI dir  : ../openapi             (repo root)
-//   Summary file : ../openapi/UPDATE_SUMMARY.json  (picked up by workflow)
+//   Summary file : ../UPDATE_SUMMARY.json  (repo root, not committed — workflow-only)
 //
 // Frequency logic:
 //   Each entry in openapi_specs.json has a "frequency" field.
@@ -212,8 +212,8 @@ public function main() returns error? {
     io:println(string `  Saved to ${outFile}`);
     io:println(BAR);
 
-    // ── Write openapi/UPDATE_SUMMARY.json ────────────────────────────────────
-    string summaryPath = "../openapi/UPDATE_SUMMARY.json";
+    // ── Write UPDATE_SUMMARY.json (repo root, not staged — workflow-only) ──────
+    string summaryPath = "../UPDATE_SUMMARY.json";
     if updatedEntries.length() > 0 || malformedEntries.length() > 0 {
         string updatedSection = "[\n";
         boolean firstU = true;
