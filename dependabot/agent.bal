@@ -75,11 +75,48 @@ function withTimeout(FetchFn fetch, decimal timeoutSecs, string opName) returns 
     return result;
 }
 
+// ─── URL safety guard ─────────────────────────────────────────────────────────
+// Blocks non-HTTPS and private/loopback/link-local addresses to prevent SSRF
+// from LLM-supplied URLs.
+
+isolated function isSafeUrl(string rawUrl) returns boolean {
+    if !rawUrl.startsWith("https://") {
+        return false;
+    }
+    string withoutScheme = rawUrl.substring(8);
+    int hostEnd = withoutScheme.indexOf("/") ?: withoutScheme.length();
+    string hostPort = withoutScheme.substring(0, hostEnd).toLowerAscii();
+    int? colonPos = hostPort.lastIndexOf(":");
+    string host = colonPos is int ? hostPort.substring(0, colonPos) : hostPort;
+    if host.startsWith("[") && host.endsWith("]") {
+        host = host.substring(1, host.length() - 1);
+    }
+    if host == "localhost" || host == "::1" || host == "0.0.0.0" {
+        return false;
+    }
+    string[] octets = re`\.`.split(host);
+    if octets.length() == 4 {
+        int|error a = int:fromString(octets[0]);
+        int|error b = int:fromString(octets[1]);
+        if a is int {
+            if a == 127 || a == 10 { return false; }
+            if a == 192 && b is int && b == 168 { return false; }
+            if a == 172 && b is int && b >= 16 && b <= 31 { return false; }
+            if a == 169 && b is int && b == 254 { return false; }
+        }
+    }
+    return true;
+}
+
 // ─── fetch_page tool handler ──────────────────────────────────────────────────
 
 const string EMPTY_HTML_RESULT = "{\"type\":\"html\",\"spec_links\":[],\"page_text\":\"\",\"other_links\":[]}";
 
 function executeFetchPage(string fetchUrl) returns string {
+    if !isSafeUrl(fetchUrl) {
+        log:printWarn(string `    [fetch] blocked unsafe URL: ${fetchUrl}`);
+        return string `{"error":"blocked: URL must use https and must not target a private or loopback address"}`;
+    }
     log:printInfo(string `    [fetch] ${fetchUrl}`);
     log:printDebug(string `    [fetch:debug] starting fetch at ${timeNow()}`);
 

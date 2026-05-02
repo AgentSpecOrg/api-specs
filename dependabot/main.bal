@@ -451,7 +451,7 @@ function prettyPrintJson(json val, int indentLevel) returns string {
 
     if val is map<json> {
         map<json> obj = val;
-        string[] keys = obj.keys();
+        string[] keys = from string k in obj.keys() order by k select k;
         if keys.length() == 0 { return "{}"; }
         string result = "{\n";
         boolean first = true;

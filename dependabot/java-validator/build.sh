@@ -43,13 +43,10 @@ if [ -f "$BAL_EXAMPLE" ] && [ ! -f "$BAL_FILE" ]; then
 fi
 
 echo "==> Uncommenting platform dependency in Ballerina.toml..."
-# Uncomment the [[platform.java21.dependency]] block
-sed -i '' \
-    's|^# \[\[platform\.java21\.dependency\]\]|[[platform.java21.dependency]]|' \
-    "$TOML"
-sed -i '' \
-    's|^# path = "libs/openapi-validator.jar"|path = "libs/openapi-validator.jar"|' \
-    "$TOML"
+# Uncomment the [[platform.java21.dependency]] block (portable: BSD and GNU sed)
+_sed_inplace() { pattern="$1"; file="$2"; tmp=$(mktemp); sed "$pattern" "$file" > "$tmp" && mv "$tmp" "$file"; }
+_sed_inplace 's|^# \[\[platform\.java21\.dependency\]\]|[[platform.java21.dependency]]|' "$TOML"
+_sed_inplace 's|^# path = "libs/openapi-validator.jar"|path = "libs/openapi-validator.jar"|' "$TOML"
 
 echo ""
 echo "==> Done!"
