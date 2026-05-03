@@ -1,35 +1,13 @@
 [
     {
-        "apiVersion": "v4",
-        "checkedAt": "2026-05-03T04:19:38.235688579Z",
-        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations",
-        "contentHash": "f11eba67da1a76ea62bd38f6f1998caa1c35f78d4cd4d513ac20d387c7bdd37a",
-        "elapsedSeconds": 37.3,
-        "format": "json",
-        "frequency": "monthly",
         "name": "HubSpot CRM Associations",
         "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations",
-        "specRepo": "HubSpot/HubSpot-public-api-spec-collection",
-        "specUrl": "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Associations/Rollouts/130902/v4/associations.json",
-        "status": "found",
-        "targetTitle": null,
-        "validationError": null
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations"
     },
-
-    {
-        "apiVersion": "1.0",
-        "checkedAt": "2026-05-03T04:19:51.353788963Z",
-        "connectorRepo": "orgBBalLib/module-ballerinax-asana",
-        "contentHash": "b04e9dcf7c0050e6c909ceefe5e91af92a1f8ea67c5df62cdb38de4c9566aede",
-        "elapsedSeconds": 12.7,
-        "format": "yaml",
-        "frequency": "monthly",
+     {
         "name": "Asana",
         "sourceUrl": "https://github.com/Asana/openapi",
-        "specRepo": "Asana/openapi",
-        "specUrl": "https://raw.githubusercontent.com/Asana/openapi/master/defs/asana_oas.yaml",
-        "status": "found",
-        "targetTitle": null,
-        "validationError": null
+        "connectorRepo": "orgBBalLib/module-ballerinax-asana"
     }
+
 ]
