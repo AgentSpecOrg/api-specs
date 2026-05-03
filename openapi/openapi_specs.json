@@ -3,5 +3,11 @@
         "name": "HubSpot CRM Associations",
         "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations",
         "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations"
+    },
+     {
+        "name": "Asana",
+        "sourceUrl": "https://github.com/Asana/openapi",
+        "connectorRepo": "orgBBalLib/module-ballerinax-asana"
     }
+
 ]
