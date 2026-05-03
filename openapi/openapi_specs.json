@@ -1,5 +1,10 @@
 [
     {
+        "name": "HubSpot CRM Associations",
+        "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations",
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations"
+    },
+    {
         "name": "Discord",
         "sourceUrl": "https://discord.com/developers/docs/reference",
         "connectorRepo": "orgBBalLib/module-ballerinax-discord"
@@ -12,15 +17,18 @@
     },
     {
         "name": "DocuSign Click",
-        "sourceUrl": "https://developers.docusign.com/docs/click-api/"
+        "sourceUrl": "https://developers.docusign.com/docs/click-api/",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsclick"
     },
     {
         "name": "DocuSign eSign API",
-        "sourceUrl": "https://developers.docusign.com/docs/esign-rest-api/"
+        "sourceUrl": "https://developers.docusign.com/docs/esign-rest-api/",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsesign"
     },
     {
         "name": "DocuSign admin API",
-        "sourceUrl": "https://support.docusign.com/s/document-item?language=en_US&bundleId=rrf1583359212854&topicId=ops1583359137726.html&_LANG=enus"
+        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsadmin"
     }
 
 ]
