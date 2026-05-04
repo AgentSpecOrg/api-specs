@@ -1,7 +1,0 @@
-{
-    "name": "DocuSign admin API",
-    "baseUrl": "https://api.docusign.net/Management",
-    "documentationUrl": "https://github.com/docusign/OpenAPI-Specifications",
-    "description": "An API for an organization administrator to manage organizations, accounts and users",
-    "tags": ["docusign", "admin"]
-}
