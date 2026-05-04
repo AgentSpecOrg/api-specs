@@ -17,12 +17,12 @@
     },
     {
         "name": "DocuSign Click",
-        "sourceUrl": "https://developers.docusign.com/docs/click-api/",
+        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
         "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsclick"
     },
     {
         "name": "DocuSign eSign",
-        "sourceUrl": "https://developers.docusign.com/docs/esign-rest-api/",
+        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
         "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsesign"
     },
     {
