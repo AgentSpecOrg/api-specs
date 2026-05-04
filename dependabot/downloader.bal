@@ -8,7 +8,8 @@
 // first time. It is never modified when an existing spec file is replaced.
 //
 // Version folder naming:
-//   - Version strings starting with a digit get a "v" prefix (e.g. "3.0" → "v3.0").
+//   - Version is used exactly as stated in the spec's info.version field.
+//     e.g. info.version "4.0.0" → folder "4.0.0", "v3.0.1" → folder "v3.0.1".
 //   - nil or empty apiVersion → "latest" is used as the folder name.
 
 import ballerina/crypto;
@@ -146,9 +147,6 @@ isolated function hasContentChanged(string? oldHash, string newHash) returns boo
 isolated function normalizeVersion(string version) returns string {
     string v = version.trim();
     if v.length() == 0 { return "latest"; }
-    if v[0] >= "0" && v[0] <= "9" {
-        return "v" + v;
-    }
     return v;
 }
 
