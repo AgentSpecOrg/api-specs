@@ -1,7 +1,0 @@
-{
-    "name": "DocuSign eSign API",
-    "baseUrl": "https://www.docusign.net/restapi",
-    "documentationUrl": "https://developers.docusign.com/docs/esign-rest-api/",
-    "description": "The Docusign eSignature REST API provides you with a powerful, convenient, and simple Web services API for interacting with Docusign.",
-    "tags": ["docusign", "esign"]
-}
