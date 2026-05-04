@@ -1,0 +1,7 @@
+{
+    "name": "Discord",
+    "baseUrl": "https://discord.com/api/v10",
+    "documentationUrl": "https://discord.com/developers/docs/reference",
+    "description": "Preview of the Discord v10 HTTP API specification. See https://discord.com/developers/docs for more details.",
+    "tags": ["discord"]
+}
