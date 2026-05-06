@@ -1,33 +1,103 @@
 [
     {
+        "apiVersion": "v4",
+        "checkedAt": "2026-05-06T10:33:22.198122197Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations",
+        "contentHash": "f11eba67da1a76ea62bd38f6f1998caa1c35f78d4cd4d513ac20d387c7bdd37a",
+        "elapsedSeconds": 34.1,
+        "format": "json",
+        "frequency": "monthly",
         "name": "HubSpot CRM Associations",
         "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations",
-        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations"
+        "specRepo": "HubSpot/HubSpot-public-api-spec-collection",
+        "specUrl": "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Associations/Rollouts/130902/v4/associations.json",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
     },
+
     {
+        "apiVersion": "10",
+        "checkedAt": "2026-05-06T10:33:37.709204855Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-discord",
+        "contentHash": "1319a0b28263b30ea66ebf430256dc978ec395b74bdb6f8c17976a66e7276a8b",
+        "elapsedSeconds": 15.1,
+        "format": "json",
+        "frequency": "monthly",
         "name": "Discord",
         "sourceUrl": "https://discord.com/developers/docs/reference",
-        "connectorRepo": "orgBBalLib/module-ballerinax-discord"
-    }
-    ,
-     {
+        "specRepo": "discord/discord-api-spec",
+        "specUrl": "https://raw.githubusercontent.com/discord/discord-api-spec/main/specs/openapi.json",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
+    },
+
+    {
+        "apiVersion": "1.0",
+        "checkedAt": "2026-05-06T10:33:53.314276929Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-asana",
+        "contentHash": "b04e9dcf7c0050e6c909ceefe5e91af92a1f8ea67c5df62cdb38de4c9566aede",
+        "elapsedSeconds": 14.9,
+        "format": "yaml",
+        "frequency": "monthly",
         "name": "Asana",
         "sourceUrl": "https://github.com/Asana/openapi",
-        "connectorRepo": "orgBBalLib/module-ballerinax-asana"
+        "specRepo": "Asana/openapi",
+        "specUrl": "https://raw.githubusercontent.com/Asana/openapi/master/defs/asana_oas.yaml",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
     },
+
     {
+        "apiVersion": "v1",
+        "checkedAt": "2026-05-06T10:34:01.838270097Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsclick",
+        "contentHash": "28f99d2e28314dbb6af9324e566958e229dee4a3eddb6b67c085e096e5b7856a",
+        "elapsedSeconds": 6.7,
+        "format": "json",
+        "frequency": "monthly",
         "name": "DocuSign Click",
         "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
-        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsclick"
+        "specRepo": "docusign/OpenAPI-Specifications",
+        "specUrl": "https://raw.githubusercontent.com/docusign/OpenAPI-Specifications/master/click.rest.swagger-v2.json",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
     },
+
     {
+        "apiVersion": "v2.1",
+        "checkedAt": "2026-05-06T10:34:15.551590023Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsesign",
+        "contentHash": "485438a50020be108af00f1280e839eb7408d2dc5084efea4759ead73700c334",
+        "elapsedSeconds": 13.5,
+        "format": "json",
+        "frequency": "monthly",
         "name": "DocuSign eSign",
         "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
-        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsesign"
+        "specRepo": "docusign/OpenAPI-Specifications",
+        "specUrl": "https://raw.githubusercontent.com/docusign/OpenAPI-Specifications/master/esignature.rest.swagger-v2.1.json",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
     },
+
     {
+        "apiVersion": "v2.1",
+        "checkedAt": "2026-05-06T10:34:28.756139926Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsadmin",
+        "contentHash": "6621a2620276bbd2995a7084f5968a61dbc2a046fd56b1f5e19907c4862ea9db",
+        "elapsedSeconds": 8.1,
+        "format": "json",
+        "frequency": "monthly",
         "name": "DocuSign admin",
         "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
-        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsadmin"
+        "specRepo": "docusign/OpenAPI-Specifications",
+        "specUrl": "https://raw.githubusercontent.com/docusign/OpenAPI-Specifications/master/admin.rest.swagger-v2.1.json",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
     }
 ]
