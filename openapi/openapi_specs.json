@@ -34,6 +34,21 @@
        "name": "GitHub",
        "sourceUrl": "https://docs.github.com/en/rest",
        "connectorRepo": "orgBBalLib/module-ballerinax-github"
+   },
+   {"name": "HubSpot CRM Associations Schema",
+   "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
+   "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations.schema"
+   },
+   {"name": "HubSpot CRM Engagements Email",
+   "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
+   "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.engagements.email"
+},
+
+   {
+   "name": "HubSpot Automation Actions",
+   "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
+   "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.automation.actions"
    }
+
 
 ]
