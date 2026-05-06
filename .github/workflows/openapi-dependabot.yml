@@ -62,35 +62,42 @@ jobs:
           cp target/openapi-validator-1.0.0-jar-with-dependencies.jar ../libs/openapi-validator.jar
           echo "JAR built and copied to dependabot/libs/openapi-validator.jar"
 
+      - name: Pull Ballerina dependencies
+        run: |
+          cd dependabot
+          bal clean
+
+          # Pull all dependencies from Ballerina Central before running.
+          # Retry on failure without clearing the cache — partial downloads
+          # accumulate across retries and clearing the cache makes things worse.
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Pulling dependencies, attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
+            bal build 2>&1 | tee /tmp/bal_build.log
+            BUILD_EXIT=${PIPESTATUS[0]}
+            if [ $BUILD_EXIT -eq 0 ]; then
+              echo "Dependencies pulled successfully"
+              break
+            fi
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "Pull failed — retrying in 60 seconds (cache kept)..."
+              sleep 60
+            else
+              echo "Failed to pull dependencies after $MAX_RETRIES attempts"
+              cat /tmp/bal_build.log
+              exit 1
+            fi
+          done
+
       - name: Run Dependabot Monitor
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           cd dependabot
-          bal clean
-
-          # Retry logic for transient Ballerina Central failures
-          MAX_RETRIES=3
-          RETRY_COUNT=0
-
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            echo "Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
-            if bal run; then
-              echo "Build succeeded!"
-              break
-            fi
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              echo "Build failed, retrying in 30 seconds..."
-              sleep 30
-              rm -rf ~/.ballerina/repositories/central.ballerina.io/cache 2>/dev/null || true
-            else
-              echo "Build failed after $MAX_RETRIES attempts"
-              exit 1
-            fi
-          done
-
+          bal run
           cd ..
 
       - name: Check for updates
