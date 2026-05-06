@@ -166,14 +166,48 @@ jobs:
 
           PR_TITLE="[Dependabot] chore: Update OpenAPI Specifications - $(date +%Y-%m-%d)"
 
-          PR_URL=$(gh pr create \
-            --title "$PR_TITLE" \
-            --body-file /tmp/pr_body.md \
-            --base main \
-            --head "$BRANCH_NAME")
+          # Check first in case the PR was created but the 504 swallowed the response.
+          EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number -q '.[0].number' 2>/dev/null || echo "")
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR already exists: #$EXISTING_PR"
+            PR_NUMBER="$EXISTING_PR"
+          else
+            MAX_RETRIES=3
+            RETRY_COUNT=0
+            PR_NUMBER=""
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              echo "Creating pull request, attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES..."
+              PR_URL=$(gh pr create \
+                --title "$PR_TITLE" \
+                --body-file /tmp/pr_body.md \
+                --base main \
+                --head "$BRANCH_NAME" 2>&1)
+              CREATE_EXIT=$?
+              if [ $CREATE_EXIT -eq 0 ]; then
+                echo "Pull Request created: $PR_URL"
+                PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
+                break
+              fi
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "PR creation failed — retrying in 30 seconds..."
+                echo "Error output: $PR_URL"
+                sleep 30
+                # Re-check in case it was created despite the error response.
+                EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number -q '.[0].number' 2>/dev/null || echo "")
+                if [ -n "$EXISTING_PR" ]; then
+                  echo "PR appeared after retry check: #$EXISTING_PR"
+                  PR_NUMBER="$EXISTING_PR"
+                  break
+                fi
+              else
+                echo "Failed to create PR after $MAX_RETRIES attempts"
+                echo "Last error: $PR_URL"
+                exit 1
+              fi
+            done
+          fi
 
-          echo "Pull Request created: $PR_URL"
-          PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
           echo "PR_NUMBER=${PR_NUMBER}" >> $GITHUB_ENV
 
       # ── Inline auto-review and merge ─────────────────────────────────────────
