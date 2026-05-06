@@ -1,7 +1,0 @@
-{
-    "name": "HubSpot CRM Associations Schema",
-    "baseUrl": "https://api.hubapi.com",
-    "documentationUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
-    "description": "Basepom for all HubSpot Projects",
-    "tags": ["hubspot", "crm", "associations", "schema"]
-}
