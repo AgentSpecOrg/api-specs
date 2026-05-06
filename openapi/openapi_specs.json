@@ -31,5 +31,25 @@
         "status": "found",
         "targetTitle": null,
         "validationError": null
+    },
+    {
+        "name": "Discord",
+        "sourceUrl": "https://discord.com/developers/docs/reference",
+        "connectorRepo": "orgBBalLib/module-ballerinax-discord"
+    },
+    {
+        "name": "DocuSign Click",
+        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsclick"
+    },
+    {
+        "name": "DocuSign eSign",
+        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsesign"
+    },
+    {
+        "name": "DocuSign admin",
+        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsadmin"
     }
 ]
