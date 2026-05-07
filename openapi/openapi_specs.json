@@ -1,45 +1,137 @@
 [
     {
+        "apiVersion": "v4",
+        "checkedAt": "2026-05-07T05:32:37.999889795Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations",
+        "contentHash": "f11eba67da1a76ea62bd38f6f1998caa1c35f78d4cd4d513ac20d387c7bdd37a",
+        "elapsedSeconds": 39.2,
+        "format": "json",
+        "frequency": "monthly",
         "name": "HubSpot CRM Associations",
         "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations",
-        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations"
+        "specRepo": "HubSpot/HubSpot-public-api-spec-collection",
+        "specUrl": "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Associations/Rollouts/130902/v4/associations.json",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
     },
+
     {
+        "apiVersion": "10",
+        "checkedAt": "2026-05-07T05:32:55.140063454Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-discord",
+        "contentHash": "90243654797849007b28bfc56a71eb52fe8f17abd5cc26309403296293366e02",
+        "elapsedSeconds": 16.7,
+        "format": "json",
+        "frequency": "monthly",
         "name": "Discord",
         "sourceUrl": "https://discord.com/developers/docs/reference",
-        "connectorRepo": "orgBBalLib/module-ballerinax-discord"
-    }
-    ,
+        "specRepo": "discord/discord-api-spec",
+        "specUrl": "https://raw.githubusercontent.com/discord/discord-api-spec/main/specs/openapi.json",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
+    },
+
     {
+        "apiVersion": "v1",
+        "checkedAt": "2026-05-07T05:33:05.417348424Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsclick",
+        "contentHash": "28f99d2e28314dbb6af9324e566958e229dee4a3eddb6b67c085e096e5b7856a",
+        "elapsedSeconds": 10.1,
+        "format": "json",
+        "frequency": "monthly",
         "name": "DocuSign Click",
         "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
-        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsclick"
+        "specRepo": "docusign/OpenAPI-Specifications",
+        "specUrl": "https://raw.githubusercontent.com/docusign/OpenAPI-Specifications/master/click.rest.swagger-v2.json",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
     },
+
     {
+        "apiVersion": "v2.1",
+        "checkedAt": "2026-05-07T05:33:14.832864274Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsadmin",
+        "contentHash": "6621a2620276bbd2995a7084f5968a61dbc2a046fd56b1f5e19907c4862ea9db",
+        "elapsedSeconds": 9.3,
+        "format": "json",
+        "frequency": "monthly",
         "name": "DocuSign admin",
         "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
-        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsadmin"
+        "specRepo": "docusign/OpenAPI-Specifications",
+        "specUrl": "https://raw.githubusercontent.com/docusign/OpenAPI-Specifications/master/admin.rest.swagger-v2.1.json",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
     },
-   {
-       "name": "GitHub",
-       "sourceUrl": "https://docs.github.com/en/rest",
-       "connectorRepo": "orgBBalLib/module-ballerinax-github"
-   },
-   {
+
+    {
+        "apiVersion": "1.1.4",
+        "checkedAt": "2026-05-07T05:33:42.325063747Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-github",
+        "contentHash": null,
+        "elapsedSeconds": 27.3,
+        "format": "yaml",
+        "frequency": "monthly",
+        "name": "GitHub",
+        "sourceUrl": "https://docs.github.com/en/rest",
+        "specRepo": "github/rest-api-description",
+        "specUrl": "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.2026-03-10.yaml",
+        "status": "found_malformed",
+        "targetTitle": null,
+        "validationError": "malformed or unreadable swagger supplied"
+    },
+
+    {
+        "apiVersion": "v4",
+        "checkedAt": "2026-05-07T05:34:08.379150457Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations.schema",
+        "contentHash": "5925025f4bdb167cf9ce2b003c44bdb6a63a78c5afb84797d33e87ee3fb136f5",
+        "elapsedSeconds": 26.0,
+        "format": "json",
+        "frequency": "monthly",
         "name": "HubSpot CRM AssociationsSchema",
         "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
-        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations.schema"
-   },
-   {
+        "specRepo": "HubSpot/HubSpot-public-api-spec-collection",
+        "specUrl": "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Associations%20Schema/Rollouts/130902/v4/associationsSchema.json",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
+    },
+
+    {
+        "apiVersion": "v3",
+        "checkedAt": "2026-05-07T05:34:32.443062723Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.engagements.email",
+        "contentHash": "5704685b29eb78cf9f7ac793902cd10b7a0a878da6782beffcb24818d839f757",
+        "elapsedSeconds": 24.0,
+        "format": "json",
+        "frequency": "monthly",
         "name": "HubSpot CRM Engagements Emails",
         "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
-        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.engagements.email"
+        "specRepo": "HubSpot/HubSpot-public-api-spec-collection",
+        "specUrl": "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Emails/Rollouts/424/v3/emails.json",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
     },
-   {
+
+    {
+        "apiVersion": "v4",
+        "checkedAt": "2026-05-07T05:34:54.627655578Z",
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.automation.actions",
+        "contentHash": "9504e452414ec7226844c56810fac65a35c919d08a9479bd9da5c0356270185c",
+        "elapsedSeconds": 22.1,
+        "format": "json",
+        "frequency": "monthly",
         "name": "HubSpot Automation Actions",
         "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
-        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.automation.actions"
-   }
-
-
+        "specRepo": "HubSpot/HubSpot-public-api-spec-collection",
+        "specUrl": "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/Automation/Actions%20V4/Rollouts/148901/v4/actionsV4.json",
+        "status": "found",
+        "targetTitle": null,
+        "validationError": null
+    }
 ]
