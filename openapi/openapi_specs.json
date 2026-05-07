@@ -1,47 +1,43 @@
 [
     {
-        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations",
-        "name": "HubSpot CRM Associations",
-        "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations"
-    },
 
-    {
-        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsclick",
-        "name": "DocuSign Click",
-        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications"
-    },
 
-    {
-
-        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsadmin",
-        "name": "DocuSign admin",
-        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications"
-    },
-
-    {
-
-        "connectorRepo": "orgBBalLib/module-ballerinax-github",
         "name": "GitHub",
-        "sourceUrl": "https://docs.github.com/en/rest"
+        "sourceUrl": "https://docs.github.com/en/rest",
+        "connectorRepo": "orgBBalLib/module-ballerinax-github"
     },
+     {
 
-    {
-
-        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations.schema",
-        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
-        "specRepo": "HubSpot/HubSpot-public-api-spec-collection"
-    },
-
-    {
-        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.engagements.email",
         "name": "HubSpot CRM Engagements Emails",
-        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection"
+        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.engagements.email"
+    },
+    {
+        "name": "HubSpot CRM Associations",
+        "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations",
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations"
+    },
+    {
+
+
+        "name": "HubSpot Automation Actions",
+        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.automation.actions"
+    },
+    {
+        "name": "DocuSign Click",
+        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsclick"
     },
 
     {
-
-        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.automation.actions",
-        "name": "HubSpot Automation Actions",
-        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection"
+        "name": "DocuSign admin",
+        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsadmin"
+    },
+    {
+        "name": "HubSpot CRM AssociationsSchema",
+        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations.schema"
     }
 ]
