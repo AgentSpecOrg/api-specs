@@ -1,33 +1,47 @@
 [
     {
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations",
         "name": "HubSpot CRM Associations",
-        "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations",
-        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations"
+        "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations"
     },
+
     {
-        "name": "Discord",
-        "sourceUrl": "https://discord.com/developers/docs/reference",
-        "connectorRepo": "orgBBalLib/module-ballerinax-discord"
-    }
-    ,
-     {
-        "name": "Asana",
-        "sourceUrl": "https://github.com/Asana/openapi",
-        "connectorRepo": "orgBBalLib/module-ballerinax-asana"
-    },
-    {
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsclick",
         "name": "DocuSign Click",
-        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
-        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsclick"
+        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications"
     },
+
     {
-        "name": "DocuSign eSign",
-        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
-        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsesign"
-    },
-    {
+
+        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsadmin",
         "name": "DocuSign admin",
-        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications",
-        "connectorRepo": "orgBBalLib/module-ballerinax-docusign.dsadmin"
+        "sourceUrl": "https://github.com/docusign/OpenAPI-Specifications"
+    },
+
+    {
+
+        "connectorRepo": "orgBBalLib/module-ballerinax-github",
+        "name": "GitHub",
+        "sourceUrl": "https://docs.github.com/en/rest"
+    },
+
+    {
+
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations.schema",
+        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection",
+        "specRepo": "HubSpot/HubSpot-public-api-spec-collection"
+    },
+
+    {
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.engagements.email",
+        "name": "HubSpot CRM Engagements Emails",
+        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection"
+    },
+
+    {
+
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.automation.actions",
+        "name": "HubSpot Automation Actions",
+        "sourceUrl": "https://github.com/HubSpot/HubSpot-public-api-spec-collection"
     }
 ]
