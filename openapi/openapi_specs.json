@@ -1,18 +1,8 @@
 [
+
     {
-        "apiVersion": "v4",
-        "checkedAt": "2026-05-09T04:11:11.943756249Z",
-        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations",
-        "contentHash": "f11eba67da1a76ea62bd38f6f1998caa1c35f78d4cd4d513ac20d387c7bdd37a",
-        "elapsedSeconds": 37.2,
-        "format": "json",
-        "frequency": "monthly",
         "name": "HubSpot CRM Associations",
         "sourceUrl": "https://developers.hubspot.com/docs/api/crm/associations",
-        "specRepo": "HubSpot/HubSpot-public-api-spec-collection",
-        "specUrl": "https://raw.githubusercontent.com/HubSpot/HubSpot-public-api-spec-collection/main/PublicApiSpecs/CRM/Associations/Rollouts/130902/v4/associations.json",
-        "status": "found",
-        "targetTitle": null,
-        "validationError": null
+        "connectorRepo": "orgBBalLib/module-ballerinax-hubspot.crm.associations"
     }
 ]
