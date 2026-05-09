@@ -36,10 +36,9 @@ function extractSpecMetadata(string content) returns string? {
             json? infoField = parsed["info"];
             if infoField is map<json> {
                 json? v = infoField["version"];
-                if v is string  { return v; }
-                if v is int     { return v.toString(); }
-                if v is decimal { return v.toString(); }
-                if v is float   { return v.toString(); }
+                if v is string { return v; }
+                if v is int || v is decimal || v is float { return v.toString(); }
+                fail error(string `Unexpected version type: ${(typeof v).toString()}`);
             }
         }
     } on fail error e {

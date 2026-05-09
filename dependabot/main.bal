@@ -44,19 +44,20 @@ import ballerina/file;
 configurable string outputFile = "../openapi/openapi_specs.json";
 configurable string openApiDir = "../openapi";
 
-const string BAR  = "================================================================";
+const string BAR = "================================================================";
 const string DASH = "----------------------------------------------------------------";
 
 const decimal DEFAULT_MAX_CONNECTOR_SECONDS = 600.0;
 
 public function main() returns error? {
-    string apiKey    = os:getEnv("ANTHROPIC_API_KEY");
+    string apiKey = os:getEnv("ANTHROPIC_API_KEY");
     string filterStr = os:getEnv("FILTER").toLowerAscii();
-    boolean dryRun   = os:getEnv("DRY_RUN").toLowerAscii() == "true";
-    string outFile   = os:getEnv("OUTPUT").length() > 0 ? os:getEnv("OUTPUT") : outputFile;
-    string ghToken   = os:getEnv("GITHUB_TOKEN");
-    string model     = os:getEnv("CLAUDE_MODEL").length() > 0 ? os:getEnv("CLAUDE_MODEL") : "claude-sonnet-4-6";
-    string specDir   = os:getEnv("OPENAPI_DIR").length() > 0 ? os:getEnv("OPENAPI_DIR") : openApiDir;
+    boolean dryRun = os:getEnv("DRY_RUN").toLowerAscii() == "true";
+    string envOutput = os:getEnv("OUTPUT");
+    string outFile = envOutput.length() > 0 ? envOutput : outputFile;
+    string ghToken = os:getEnv("GITHUB_TOKEN");
+    string model = os:getEnv("CLAUDE_MODEL").length() > 0 ? os:getEnv("CLAUDE_MODEL") : DEFAULT_MODEL;
+    string specDir = os:getEnv("OPENAPI_DIR").length() > 0 ? os:getEnv("OPENAPI_DIR") : openApiDir;
 
     decimal maxConnectorSecs = DEFAULT_MAX_CONNECTOR_SECONDS;
     string envBudget = os:getEnv("MAX_CONNECTOR_SECONDS");
@@ -132,9 +133,9 @@ public function main() returns error? {
 
         Connector c = {name: r.name, sourceUrl: r.sourceUrl, targetTitle: r.targetTitle};
 
-        string? knownUrl  = r.specUrl;
+        string? knownUrl = r.specUrl;
         string? knownRepo = r.specRepo;
-        string? prevFreq  = r.frequency;
+        Frequency? prevFreq = r.frequency;
 
         // ── Frequency skip check ──────────────────────────────────────────────
         if shouldSkipDueToFrequency(r) {
@@ -171,9 +172,9 @@ public function main() returns error? {
 
             // ── Download spec to openapi/ folder ─────────────────────────────
             string vendor = deriveVendor(c.name);
-            string apiId  = deriveApiId(c.name);
-            string specUrl  = entry.specUrl ?: "";
-            string fmt      = entry.format ?: "json";
+            string apiId = deriveApiId(c.name);
+            string specUrl = entry.specUrl ?: "";
+            string fmt = entry.format ?: "json";
 
             [boolean, string]|error downloadResult = downloadAndSaveSpec(
                 specUrl, fmt, entry.apiVersion, vendor, apiId, specDir, c.name, c.sourceUrl
@@ -273,7 +274,7 @@ public function main() returns error? {
 // null frequency means "always process" (development override mode).
 
 function shouldSkipDueToFrequency(ResultEntry prev) returns boolean {
-    string? freq = prev.frequency;
+    Frequency? freq = prev.frequency;
 
     // null → never skip (dev override mode)
     if freq is () {
@@ -287,10 +288,12 @@ function shouldSkipDueToFrequency(ResultEntry prev) returns boolean {
 
     decimal secondsSince = time:utcDiffSeconds(time:utcNow(), checkedTime);
 
-    if freq == "daily"     { return secondsSince < 86400.0d; }
-    if freq == "weekly"    { return secondsSince < 604800.0d; }
-    if freq == "monthly"   { return secondsSince < 2592000.0d; }
-    if freq == "quarterly" { return secondsSince < 7776000.0d; }
+    match freq {
+        "daily"     => { return secondsSince < 86400.0d; }
+        "weekly"    => { return secondsSince < 604800.0d; }
+        "monthly"   => { return secondsSince < 2592000.0d; }
+        "quarterly" => { return secondsSince < 7776000.0d; }
+    }
 
     return false;
 }
@@ -316,18 +319,13 @@ function runConnectorWithBudget(
         decimal elapsed = rd(time:utcDiffSeconds(time:utcNow(), t0));
         log:printError(string `${progress} BUDGET EXCEEDED after ${elapsed}s — abandoning connector`);
         return {
-            name:           c.name,
-            sourceUrl:      c.sourceUrl,
-            targetTitle:    c.targetTitle,
-            specUrl:        (),
-            specRepo:       (),
-            apiVersion:     (),
-            format:         (),
-            frequency:      (),
-            status:         "not_found",
-            checkedAt:      time:utcToString(time:utcNow()),
-            elapsedSeconds: elapsed,
-            contentHash:    ()
+            name: c.name,
+            sourceUrl: c.sourceUrl,
+            targetTitle: c.targetTitle,
+            frequency: (),
+            status: "not_found",
+            checkedAt: time:utcToString(time:utcNow()),
+            elapsedSeconds: elapsed
         };
     }
     ResultEntry result = wait processor | timer;
@@ -408,34 +406,28 @@ function processConnector(
 
     if finalResult is SpecResult {
         return {
-            name:           c.name,
-            sourceUrl:      c.sourceUrl,
-            targetTitle:    c.targetTitle,
-            specUrl:        finalResult.specUrl,
-            specRepo:       finalResult.specRepo,
-            apiVersion:     finalResult.apiVersion,
-            format:          finalResult.format,
-            frequency:       (),      // set by caller after return
-            status:          finalResult.malformed ? "found_malformed" : "found",
-            checkedAt:       time:utcToString(time:utcNow()),
-            elapsedSeconds:  elapsed,
-            contentHash:     (),      // set by caller after download
+            name: c.name,
+            sourceUrl: c.sourceUrl,
+            targetTitle: c.targetTitle,
+            specUrl: finalResult.specUrl,
+            specRepo: finalResult.specRepo,
+            apiVersion: finalResult.apiVersion,
+            format: finalResult.format,
+            frequency: (),      // set by caller after return
+            status: finalResult.malformed ? "found_malformed" : "found",
+            checkedAt: time:utcToString(time:utcNow()),
+            elapsedSeconds: elapsed,
             validationError: finalResult.validationError
         };
     } else {
         return {
-            name:           c.name,
-            sourceUrl:      c.sourceUrl,
-            targetTitle:    c.targetTitle,
-            specUrl:        (),
-            specRepo:       (),
-            apiVersion:     (),
-            format:         (),
-            frequency:      (),
-            status:         "not_found",
-            checkedAt:      time:utcToString(time:utcNow()),
-            elapsedSeconds: elapsed,
-            contentHash:    ()
+            name: c.name,
+            sourceUrl: c.sourceUrl,
+            targetTitle: c.targetTitle,
+            frequency: (),
+            status: "not_found",
+            checkedAt: time:utcToString(time:utcNow()),
+            elapsedSeconds: elapsed
         };
     }
 }

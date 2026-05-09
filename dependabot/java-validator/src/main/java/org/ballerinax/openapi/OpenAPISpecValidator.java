@@ -42,7 +42,10 @@ public class OpenAPISpecValidator {
             if (result.getOpenAPI() != null) {
                 String version = result.getOpenAPI().getOpenapi();
                 if (version == null || version.isEmpty()) {
-                    version = "2.0";   // Swagger 2.0 uses result.getSwagger()
+                    // getSpecVersion() is more reliable for Swagger 2.0 specs where
+                    // getOpenapi() returns null; fall back to "2.0" if both are absent.
+                    Object specVersion = result.getOpenAPI().getSpecVersion();
+                    version = specVersion != null ? specVersion.toString() : "2.0";
                 }
                 return "valid:" + version;
             }

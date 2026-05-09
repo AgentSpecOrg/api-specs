@@ -33,10 +33,17 @@ import ballerina/file;
 import ballerina/io;
 import ballerina/log;
 
-// Downloads a spec and saves it to the appropriate folder.
-// Returns [changed, newContentHash]:
-//   changed=true  → file was added or updated
-//   changed=false → file already existed with identical content
+# Downloads a spec and saves it to the appropriate folder.
+#
+# + specUrl - URL to fetch the spec from
+# + format - File format: "json" or "yaml"
+# + apiVersion - API version from the spec's info.version, or nil for "latest"
+# + vendor - Vendor identifier derived from the connector name
+# + apiId - API identifier derived from the connector name
+# + openApiDir - Base directory for storing downloaded specs
+# + connectorName - Display name of the connector
+# + sourceUrl - Documentation URL used as the metadata documentationUrl
+# + return - `[true, hash]` if the file was added or updated, `[false, hash]` if unchanged
 function downloadAndSaveSpec(
     string specUrl,
     string format,
@@ -51,12 +58,12 @@ function downloadAndSaveSpec(
     string versionFolder = normalizeVersion(apiVersion ?: "");
     string fileName = format == "json" ? "openapi.json" : "openapi.yaml";
 
-    string specDir    = string `${openApiDir}/${vendor}/${apiId}`;
+    string specDir = string `${openApiDir}/${vendor}/${apiId}`;
     string versionDir = string `${specDir}/${versionFolder}`;
-    string specFile   = string `${versionDir}/${fileName}`;
+    string specFile = string `${versionDir}/${fileName}`;
     string otherFileName = format == "json" ? "openapi.yaml" : "openapi.json";
     string otherFile = string `${versionDir}/${otherFileName}`;
-    string metaFile   = string `${versionDir}/.metadata.json`;
+    string metaFile = string `${versionDir}/.metadata.json`;
 
     log:printInfo(string `  [download] --- BEGIN ${vendor}/${apiId}@${versionFolder} ---`);
     log:printInfo(string `  [download] openApiDir  : ${openApiDir}`);
@@ -80,24 +87,13 @@ function downloadAndSaveSpec(
 
     if versionDirExists {
         boolean targetExists = check file:test(specFile, file:EXISTS);
-        boolean otherExists  = check file:test(otherFile, file:EXISTS);
+        boolean otherExists = check file:test(otherFile, file:EXISTS);
         boolean metaExistsNow = check file:test(metaFile, file:EXISTS);
         log:printInfo(string `  [download] EXISTS(${fileName})       = ${targetExists}`);
         log:printInfo(string `  [download] EXISTS(${otherFileName})  = ${otherExists}`);
         log:printInfo(string `  [download] EXISTS(.metadata.json)    = ${metaExistsNow}`);
 
-        string? oldHash = ();
-        if targetExists {
-            string existingContent = check io:fileReadString(specFile);
-            oldHash = calculateHash(existingContent);
-            log:printInfo(string `  [download] oldHash(${fileName})  : ${(<string>oldHash).substring(0, 16)}...`);
-        } else if otherExists {
-            string existingContent = check io:fileReadString(otherFile);
-            oldHash = calculateHash(existingContent);
-            log:printInfo(string `  [download] oldHash(${otherFileName}): ${(<string>oldHash).substring(0, 16)}...`);
-        } else {
-            log:printInfo(string `  [download] no existing spec file found in version dir`);
-        }
+        string? oldHash = check readExistingSpecHash(specFile, otherFile, targetExists, otherExists, fileName, otherFileName);
 
         if oldHash is string && !hasContentChanged(oldHash, newHash) {
             log:printInfo(string `  [download] SKIP — content unchanged for ${vendor}/${apiId}@${versionFolder}`);
@@ -105,16 +101,7 @@ function downloadAndSaveSpec(
         }
         log:printInfo(string `  [download] content changed (or no prior file) — will replace`);
 
-        if targetExists {
-            log:printInfo(string `  [download] removing: ${specFile}`);
-            check file:remove(specFile);
-            log:printInfo(string `  [download] removed ${fileName}`);
-        }
-        if otherExists {
-            log:printInfo(string `  [download] removing: ${otherFile}`);
-            check file:remove(otherFile);
-            log:printInfo(string `  [download] removed stale ${otherFileName}`);
-        }
+        check removeExistingSpecFiles(specFile, otherFile, targetExists, otherExists, fileName, otherFileName);
 
         log:printInfo(string `  [download] writing new spec (metadata WILL NOT be touched)`);
     } else {
@@ -126,9 +113,9 @@ function downloadAndSaveSpec(
         log:printInfo(string `  [download] EXISTS(.metadata.json) after createDir = ${metaExists}`);
         if !metaExists {
             log:printInfo(string `  [download] creating .metadata.json`);
-            string? baseUrl     = extractSpecBaseUrl(content);
+            string? baseUrl = extractSpecBaseUrl(content);
             string? description = extractSpecDescription(content);
-            string[] tags       = deriveTags(connectorName, vendor);
+            string[] tags = deriveTags(connectorName, vendor);
             check io:fileWriteString(metaFile, buildMetadataJson(connectorName, baseUrl, sourceUrl, description, tags));
             log:printInfo(string `  [download] created .metadata.json`);
         } else {
@@ -156,6 +143,68 @@ isolated function hasContentChanged(string? oldHash, string newHash) returns boo
         return true;
     }
     return oldHash != newHash;
+}
+
+# Reads the hash of whichever spec file currently exists in the version folder.
+# Prefers the target-format file; falls back to the other-format file.
+#
+# + specFile - Path to the spec file in the target format
+# + otherFile - Path to the spec file in the alternate format
+# + targetExists - Whether specFile exists
+# + otherExists - Whether otherFile exists
+# + fileName - Filename of the target format (for logging)
+# + otherFileName - Filename of the alternate format (for logging)
+# + return - SHA-256 hash of the existing file content, or nil if no file exists
+function readExistingSpecHash(
+    string specFile,
+    string otherFile,
+    boolean targetExists,
+    boolean otherExists,
+    string fileName,
+    string otherFileName
+) returns string?|error {
+    if targetExists {
+        string existingContent = check io:fileReadString(specFile);
+        string hash = calculateHash(existingContent);
+        log:printInfo(string `  [download] oldHash(${fileName})  : ${hash.substring(0, 16)}...`);
+        return hash;
+    }
+    if otherExists {
+        string existingContent = check io:fileReadString(otherFile);
+        string hash = calculateHash(existingContent);
+        log:printInfo(string `  [download] oldHash(${otherFileName}): ${hash.substring(0, 16)}...`);
+        return hash;
+    }
+    log:printInfo(string `  [download] no existing spec file found in version dir`);
+    return ();
+}
+
+# Removes existing spec files from a version folder before writing updated content.
+#
+# + specFile - Path to the target-format spec file
+# + otherFile - Path to the alternate-format spec file
+# + targetExists - Whether specFile exists and should be removed
+# + otherExists - Whether otherFile exists and should be removed
+# + fileName - Filename of the target format (for logging)
+# + otherFileName - Filename of the alternate format (for logging)
+function removeExistingSpecFiles(
+    string specFile,
+    string otherFile,
+    boolean targetExists,
+    boolean otherExists,
+    string fileName,
+    string otherFileName
+) returns error? {
+    if targetExists {
+        log:printInfo(string `  [download] removing: ${specFile}`);
+        check file:remove(specFile);
+        log:printInfo(string `  [download] removed ${fileName}`);
+    }
+    if otherExists {
+        log:printInfo(string `  [download] removing: ${otherFile}`);
+        check file:remove(otherFile);
+        log:printInfo(string `  [download] removed stale ${otherFileName}`);
+    }
 }
 
 // ─── Version / path helpers ───────────────────────────────────────────────────

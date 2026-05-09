@@ -28,6 +28,8 @@ import ballerina/log;
 import ballerina/os;
 import ballerina/time;
 
+const string DEFAULT_MODEL = "claude-sonnet-4-6";
+
 // ─── STEP 1: Quick Verify (stable/direct URLs only) ──────────────────────────
 
 public function stepQuickVerify(
@@ -125,8 +127,8 @@ public function stepStableVersionCheck(
     string anthropicKey
 ) returns SpecResult?|string {
 
-    log:printInfo(string `  [step1b] stable version check: ${knownSpecUrl}`);
-    log:printDebug(string `  [step1b:debug] sourceUrl=${sourceUrl} knownRepo=${knownSpecRepo ?: "none"}`);
+    log:printInfo(string `  [stable-check] stable version check: ${knownSpecUrl}`);
+    log:printDebug(string `  [stable-check:debug] sourceUrl=${sourceUrl} knownRepo=${knownSpecRepo ?: "none"}`);
 
     string userMsg = string `Verify this OpenAPI spec URL and check if it is still the latest stable version.
 
@@ -145,18 +147,18 @@ Return STABLE_CHECK_RESULT.`;
     json[] messages = [{"role": "user", "content": userMsg}];
     map<boolean> fetched = {};
     string model = os:getEnv("CLAUDE_MODEL");
-    if model.length() == 0 { model = "claude-sonnet-4-6"; }
+    if model.length() == 0 { model = DEFAULT_MODEL; }
     int maxTurns = 9;
     int turn = 0;
 
     while turn < maxTurns {
         turn += 1;
         log:printInfo(string `  [step1b turn ${turn}/${maxTurns}]`);
-        log:printDebug(string `  [step1b:debug] turn ${turn} — calling Claude`);
+        log:printDebug(string `  [stable-check:debug] turn ${turn} — calling Claude`);
 
         json|error resp = callClaude(anthropicKey, model, messages, STABLE_CHECK_SYSTEM_PROMPT);
         if resp is error {
-            log:printWarn(string `  [step1b] Claude API error: ${resp.message()}`);
+            log:printWarn(string `  [stable-check] Claude API error: ${resp.message()}`);
             return ();
         }
 
@@ -183,7 +185,7 @@ Return STABLE_CHECK_RESULT.`;
             }
         }
 
-        log:printDebug(string `  [step1b:debug] stop_reason=${stopReason} textLen=${text.length()} toolCalls=${toolBlocks.length()}`);
+        log:printDebug(string `  [stable-check:debug] stop_reason=${stopReason} textLen=${text.length()} toolCalls=${toolBlocks.length()}`);
 
         if text.length() > 0 {
             int preview = text.length() > 400 ? 400 : text.length();
@@ -207,9 +209,9 @@ Return STABLE_CHECK_RESULT.`;
                     if inp is map<json> {
                         json? urlVal = inp["url"];
                         if urlVal is string {
-                            log:printDebug(string `  [step1b:debug] tool call: fetch_page url=${urlVal}`);
+                            log:printDebug(string `  [stable-check:debug] tool call: fetch_page url=${urlVal}`);
                             if fetched.hasKey(urlVal) {
-                                log:printDebug("  [step1b:debug] URL already fetched — returning cached error");
+                                log:printDebug("  [stable-check:debug] URL already fetched — returning cached error");
                                 output = "{\"error\":\"already fetched\"}";
                             } else {
                                 fetched[urlVal] = true;
@@ -230,11 +232,11 @@ Return STABLE_CHECK_RESULT.`;
             continue;
         }
 
-        log:printWarn(string `  [step1b] unexpected stop_reason='${stopReason}' at turn ${turn} — aborting`);
+        log:printWarn(string `  [stable-check] unexpected stop_reason='${stopReason}' at turn ${turn} — aborting`);
         break;
     }
 
-    log:printWarn(string `  [step1b] exhausted ${maxTurns} turns without a result`);
+    log:printWarn(string `  [stable-check] exhausted ${maxTurns} turns without a result`);
     return ();
 }
 
@@ -244,7 +246,7 @@ function parseStableCheckResult(string text, string fallbackUrl, string? fallbac
     string after = text.substring(idx + 20).trim();
 
     if after.startsWith("DEAD") {
-        log:printInfo("  [step1b] known URL is DEAD — triggering re-discovery");
+        log:printInfo("  [stable-check] known URL is DEAD — triggering re-discovery");
         return "DEAD";
     }
 
@@ -260,35 +262,35 @@ function parseStableCheckResult(string text, string fallbackUrl, string? fallbac
 
     if resultUrl.length() == 0 { resultUrl = fallbackUrl; }
 
-    log:printDebug(string `  [step1b:debug] parsed result url=${resultUrl} repo=${repo}`);
+    log:printDebug(string `  [stable-check:debug] parsed result url=${resultUrl} repo=${repo}`);
 
     if !headOk(resultUrl) {
-        log:printWarn(string `  [step1b] returned URL failed HEAD check: ${resultUrl}`);
+        log:printWarn(string `  [stable-check] returned URL failed HEAD check: ${resultUrl}`);
         return ();
     }
 
     string|error body = httpGetBodyFull(resultUrl);
     if body is error {
-        log:printWarn(string `  [step1b] content fetch failed for ${resultUrl}: ${body.message()}`);
+        log:printWarn(string `  [stable-check] content fetch failed for ${resultUrl}: ${body.message()}`);
         return ();
     }
     [boolean, string] [valid, detail] = javaValidateSpec(body);
-    log:printDebug(string `  [step1b:debug] java validation: valid=${valid} detail=${detail}`);
+    log:printDebug(string `  [stable-check:debug] java validation: valid=${valid} detail=${detail}`);
 
     if detail == "java-validator-unavailable" {
         if !looksLikeSpec(body) {
-            log:printWarn(string `  [step1b] heuristic rejected ${resultUrl}: content does not look like a spec`);
+            log:printWarn(string `  [stable-check] heuristic rejected ${resultUrl}: content does not look like a spec`);
             return ();
         }
-        log:printInfo(string `  [step1b] heuristic accepted (java-validator unavailable): ${resultUrl}`);
+        log:printInfo(string `  [stable-check] heuristic accepted (java-validator unavailable): ${resultUrl}`);
     } else if !valid {
-        log:printWarn(string `  [step1b] Java parser rejected ${resultUrl}: ${detail}`);
+        log:printWarn(string `  [stable-check] Java parser rejected ${resultUrl}: ${detail}`);
         if !looksLikeSpec(body) {
             return ();
         }
-        log:printWarn(string `  [step1b] heuristic override — Java parser rejected but content looks like a spec: ${resultUrl}`);
+        log:printWarn(string `  [stable-check] heuristic override — Java parser rejected but content looks like a spec: ${resultUrl}`);
     } else {
-        log:printInfo(string `  [step1b] confirmed valid OpenAPI ${detail}: ${resultUrl}`);
+        log:printInfo(string `  [stable-check] confirmed valid OpenAPI ${detail}: ${resultUrl}`);
     }
 
     // Extract title and apiVersion from the fetched content
@@ -296,10 +298,10 @@ function parseStableCheckResult(string text, string fallbackUrl, string? fallbac
 
     string fmt = resultUrl.toLowerAscii().endsWith(".json") ? "json" : "yaml";
     return {
-        specUrl:    resultUrl,
-        specRepo:   repo.length() > 0 ? repo : fallbackRepo,
+        specUrl: resultUrl,
+        specRepo: repo.length() > 0 ? repo : fallbackRepo,
         apiVersion: extractedVersion,
-        format:     fmt
+        format: fmt
     };
 }
 
@@ -382,7 +384,7 @@ Docs URL (official documentation page — use to cross-reference the latest vers
     json[] messages = [{"role": "user", "content": userMsg}];
     map<boolean> fetched = {};
     string model = os:getEnv("CLAUDE_MODEL");
-    if model.length() == 0 { model = "claude-sonnet-4-6"; }
+    if model.length() == 0 { model = DEFAULT_MODEL; }
     int maxTurns = 7;
     int turn = 0;
 
@@ -532,10 +534,10 @@ function parseGithubCheckResult(string text, string? fallbackRepo) returns SpecR
 
     string fmt = resultUrl.toLowerAscii().endsWith(".json") ? "json" : "yaml";
     return {
-        specUrl:    resultUrl,
-        specRepo:   repo.length() > 0 ? repo : fallbackRepo,
+        specUrl: resultUrl,
+        specRepo: repo.length() > 0 ? repo : fallbackRepo,
         apiVersion: extractedVersion,
-        format:     fmt
+        format: fmt
     };
 }
 
@@ -733,7 +735,7 @@ Return DISCOVERY_RESULT with raw download URLs only. List official vendor URLs b
     json[] messages = [{"role": "user", "content": userMsg}];
     map<boolean> fetched = {};
     string model = os:getEnv("CLAUDE_MODEL");
-    if model.length() == 0 { model = "claude-sonnet-4-6"; }
+    if model.length() == 0 { model = DEFAULT_MODEL; }
 
     int maxTurns = 10;
     int turn = 0;
@@ -931,10 +933,10 @@ public function directVerifyKnownUrl(string knownUrl, string? knownRepo) returns
     string? extractedVersion = extractSpecMetadata(body);
 
     return {
-        specUrl:    knownUrl,
-        specRepo:   knownRepo,
+        specUrl: knownUrl,
+        specRepo: knownRepo,
         apiVersion: extractedVersion,
-        format:     fmt
+        format: fmt
     };
 }
 
@@ -1015,11 +1017,11 @@ public function stepContentVerify(
         if accepted {
             string? extractedVersion = extractSpecMetadata(body);
             return {
-                specUrl:         candidateUrl,
-                specRepo:        discovery.specRepo,
-                apiVersion:      extractedVersion,
-                format:          fmt,
-                malformed:       malformedAccept,
+                specUrl: candidateUrl,
+                specRepo: discovery.specRepo,
+                apiVersion: extractedVersion,
+                format: fmt,
+                malformed: malformedAccept,
                 validationError: rejectReason
             };
         }

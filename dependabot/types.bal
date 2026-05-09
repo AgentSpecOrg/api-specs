@@ -14,6 +14,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
+public type Frequency "daily"|"weekly"|"monthly"|"quarterly";
+
+public type Status "pending"|"found"|"found_malformed"|"not_found";
+
 public type Connector record {|
     string name;
     string sourceUrl;
@@ -40,8 +44,8 @@ public type ResultEntry record {|
     string? specRepo = ();
     string? apiVersion = ();
     string? format = ();
-    string? frequency = "monthly";
-    string status = "pending";
+    Frequency? frequency = "monthly";
+    Status status = "pending";
     string checkedAt = "";
     decimal elapsedSeconds = 0.0d;
     string? contentHash = ();

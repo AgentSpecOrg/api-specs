@@ -92,9 +92,13 @@ function withTimeout(FetchFn fetch, decimal timeoutSecs, string opName) returns 
 }
 
 // ─── URL safety guard ─────────────────────────────────────────────────────────
-// Blocks non-HTTPS and private/loopback/link-local addresses to prevent SSRF
-// from LLM-supplied URLs.
 
+# Checks whether a URL is safe to fetch.
+# Blocks non-HTTPS schemes and private/loopback/link-local address ranges to
+# prevent SSRF from LLM-supplied URLs.
+#
+# + rawUrl - The URL to validate
+# + return - `true` if the URL is safe to fetch, `false` if it should be blocked
 isolated function isSafeUrl(string rawUrl) returns boolean {
     if !rawUrl.startsWith("https://") {
         return false;
